@@ -267,6 +267,221 @@ canvas{display:block;max-width:100%!important;}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid var(--gold);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--cream);z-index:400;transform:translateY(70px);opacity:0;transition:all .3s;box-shadow:0 8px 24px rgba(0,0,0,.4);}
 .toast.show{transform:translateY(0);opacity:1;}
 .upload-section{margin-bottom:20px;}
+
+/* ══ VENTAS & CAJA — La Matriarca ══ */
+#screen-caja {
+  display:none; background:#0e0e0c; min-height:100vh; font-family:'DM Sans',sans-serif;
+  --gold:#c9a84c; --gold-light:#e8c96a; --dark1:#0e0e0c; --dark2:#141210;
+  --dark3:#1a1714; --dark4:#211f1a; --dark5:#2a2720;
+  --text:#e8e0d0; --text-muted:#9a9080; --red:#c94c4c; --green:#4caa6e;
+  --blue:#4c8ec9; --border:rgba(255,255,255,0.07);
+}
+#screen-caja * { box-sizing:border-box; margin:0; padding:0; }
+#screen-caja .caja-topbar {
+  position:sticky; top:0; z-index:20; background:#141210;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 16px; gap:10px;
+}
+#screen-caja .caja-topbar-left { display:flex; align-items:center; gap:8px; }
+#screen-caja .caja-topbar-brand { font-size:13px; font-weight:700; color:var(--gold); letter-spacing:1px; }
+#screen-caja .caja-topbar-sub { font-size:10px; color:var(--text-muted); }
+#screen-caja .caja-user-badge {
+  display:flex; align-items:center; gap:8px; background:var(--dark4);
+  border:1px solid var(--border); border-radius:20px; padding:4px 12px 4px 4px;
+}
+#screen-caja .caja-avatar {
+  width:26px; height:26px; border-radius:50%; background:var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:#0e0e0c;
+}
+#screen-caja .caja-badge-name { font-size:11px; font-weight:600; color:var(--text); }
+#screen-caja .caja-badge-role { font-size:10px; color:var(--text-muted); }
+#screen-caja .caja-date-display {
+  font-size:11px; color:var(--text-muted); background:var(--dark4);
+  border:1px solid var(--border); border-radius:8px; padding:4px 10px;
+}
+#screen-caja .caja-nav {
+  display:flex; background:#141210; border-top:1px solid var(--border);
+  position:fixed; bottom:0; left:0; right:0; z-index:20;
+}
+#screen-caja .caja-nav-btn {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:8px 4px 10px; gap:2px; background:none; border:none;
+  color:var(--text-muted); font-size:9px; font-weight:600; cursor:pointer;
+  letter-spacing:.3px; text-transform:uppercase; font-family:'DM Sans',sans-serif;
+  transition:color .2s; border-top:2px solid transparent;
+}
+#screen-caja .caja-nav-btn.active { color:var(--gold); border-top-color:var(--gold); }
+#screen-caja .caja-nav-icon { font-size:18px; line-height:1; }
+#screen-caja .caja-content { padding:16px 16px 80px; max-width:700px; margin:0 auto; }
+#screen-caja .caja-page { display:none; }
+#screen-caja .caja-page.active { display:block; }
+#screen-caja .caja-card {
+  background:var(--dark3); border:1px solid var(--border); border-radius:12px;
+  padding:16px; margin-bottom:14px;
+}
+#screen-caja .caja-card-title {
+  font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;
+  letter-spacing:1px; margin-bottom:14px; display:flex; align-items:center; gap:6px;
+}
+#screen-caja .caja-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+#screen-caja .caja-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+#screen-caja .caja-grid-4 { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; }
+@media(max-width:500px){
+  #screen-caja .caja-grid-3 { grid-template-columns:1fr 1fr; }
+  #screen-caja .caja-grid-4 { grid-template-columns:1fr 1fr; }
+}
+#screen-caja .caja-field label {
+  display:block; font-size:11px; color:var(--text-muted); margin-bottom:5px; font-weight:600;
+}
+#screen-caja .caja-field input, #screen-caja .caja-field select {
+  width:100%; background:var(--dark4); border:1px solid var(--border);
+  border-radius:8px; padding:10px 12px; color:var(--text); font-size:14px;
+  font-family:'DM Sans',sans-serif; outline:none; transition:border .2s;
+}
+#screen-caja .caja-field input:focus { border-color:rgba(201,168,76,.4); }
+#screen-caja .caja-stat {
+  background:var(--dark4); border:1px solid var(--border); border-radius:10px;
+  padding:10px 12px; text-align:center;
+}
+#screen-caja .caja-stat-label { font-size:10px; color:var(--text-muted); margin-bottom:4px; font-weight:600; }
+#screen-caja .caja-stat-val { font-size:16px; font-weight:700; color:var(--text); }
+#screen-caja .caja-stat-val.gold { color:var(--gold); }
+#screen-caja .caja-stat-val.green { color:var(--green); }
+#screen-caja .caja-stat-val.red { color:var(--red); }
+#screen-caja .caja-divider { border:none; border-top:1px solid var(--border); margin:14px 0; }
+#screen-caja .caja-btn {
+  display:inline-flex; align-items:center; gap:6px; padding:10px 18px;
+  border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;
+  border:none; font-family:'DM Sans',sans-serif; transition:all .2s;
+}
+#screen-caja .caja-btn-gold { background:var(--gold); color:#0e0e0c; }
+#screen-caja .caja-btn-gold:hover { background:var(--gold-light); }
+#screen-caja .caja-btn-outline {
+  background:transparent; color:var(--text-muted); border:1px solid var(--border);
+}
+#screen-caja .caja-btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+#screen-caja .caja-btn-red { background:rgba(201,76,76,.15); color:var(--red); border:1px solid rgba(201,76,76,.3); }
+#screen-caja .caja-btn-sm { padding:7px 12px; font-size:11px; }
+#screen-caja .caja-bill-row {
+  display:grid; grid-template-columns:80px 1fr 90px; gap:8px;
+  align-items:center; margin-bottom:6px;
+}
+#screen-caja .caja-denom { font-size:13px; color:var(--text-muted); font-weight:600; }
+#screen-caja .caja-bill-row input {
+  background:var(--dark4); border:1px solid var(--border); border-radius:6px;
+  padding:7px 10px; color:var(--text); font-size:13px; font-family:'DM Sans',sans-serif; width:100%;
+}
+#screen-caja .caja-subtotal { font-size:13px; color:var(--text); text-align:right; font-weight:600; }
+#screen-caja .caja-egr-item {
+  background:var(--dark4); border:1px solid var(--border); border-radius:10px;
+  margin-bottom:8px; overflow:hidden;
+}
+#screen-caja .caja-egr-header {
+  display:flex; align-items:center; gap:8px; padding:10px 12px; cursor:pointer;
+}
+#screen-caja .caja-egr-num {
+  width:22px; height:22px; border-radius:50%; background:rgba(201,168,76,.15);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; color:var(--gold); flex-shrink:0;
+}
+#screen-caja .caja-egr-body { padding:12px; border-top:1px solid var(--border); display:none; }
+#screen-caja .caja-egr-item.open .caja-egr-body { display:block; }
+#screen-caja .caja-badge {
+  display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px;
+  font-size:11px; font-weight:600;
+}
+#screen-caja .caja-badge-green { background:rgba(76,170,110,.15); color:var(--green); }
+#screen-caja .caja-badge-red { background:rgba(201,76,76,.15); color:var(--red); }
+#screen-caja .caja-badge-gold { background:rgba(201,168,76,.15); color:var(--gold); }
+#screen-caja .caja-locked-banner {
+  background:rgba(76,142,201,.08); border:1px solid rgba(76,142,201,.2);
+  border-radius:10px; padding:12px 16px; display:flex; align-items:center;
+  gap:10px; margin-bottom:14px; color:var(--blue); font-size:13px;
+}
+/* Login */
+#screen-caja .caja-login-wrap {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  padding:20px; background:var(--dark1);
+}
+#screen-caja .caja-login-box {
+  background:var(--dark3); border:1px solid var(--border); border-radius:16px;
+  padding:32px 24px; width:100%; max-width:360px; text-align:center;
+}
+#screen-caja .caja-login-logo {
+  font-size:22px; font-weight:700; color:var(--gold); letter-spacing:2px; margin-bottom:4px;
+}
+#screen-caja .caja-login-sub {
+  font-size:11px; color:var(--text-muted); letter-spacing:1px; margin-bottom:24px;
+}
+#screen-caja .caja-role-btns { display:flex; gap:10px; margin-bottom:20px; }
+#screen-caja .caja-role-btn {
+  flex:1; padding:14px; border-radius:10px; background:var(--dark4);
+  border:2px solid var(--border); cursor:pointer; transition:all .2s;
+  color:var(--text-muted); font-size:12px; font-weight:600; font-family:'DM Sans',sans-serif;
+}
+#screen-caja .caja-role-btn.selected { border-color:var(--gold); color:var(--gold); background:rgba(201,168,76,.08); }
+#screen-caja .caja-role-icon { font-size:28px; display:block; margin-bottom:6px; }
+#screen-caja .caja-pass-wrap { position:relative; margin-bottom:14px; }
+#screen-caja .caja-pass-wrap input { padding-right:44px; }
+#screen-caja .caja-eye-btn {
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:16px;
+}
+#screen-caja .caja-login-error { color:var(--red); font-size:12px; min-height:18px; margin-bottom:10px; }
+/* Historial table */
+#screen-caja .caja-table { width:100%; border-collapse:collapse; font-size:12px; }
+#screen-caja .caja-table th {
+  background:var(--dark4); color:var(--text-muted); padding:8px 10px;
+  text-align:left; font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:.5px;
+}
+#screen-caja .caja-table td { padding:10px; border-bottom:1px solid var(--border); color:var(--text); }
+#screen-caja .caja-table tr:hover td { background:rgba(255,255,255,.02); }
+#screen-caja .caja-table .num { text-align:right; font-variant-numeric:tabular-nums; }
+/* Toast */
+#caja-toast {
+  position:fixed; bottom:85px; left:50%; transform:translateX(-50%) translateY(60px);
+  background:#211f1a; border:1px solid var(--border); border-radius:10px;
+  padding:10px 20px; font-size:13px; color:var(--text); z-index:999;
+  transition:transform .3s, opacity .3s; opacity:0; white-space:nowrap;
+}
+#caja-toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+/* Loading */
+#caja-loading {
+  position:fixed; inset:0; background:rgba(14,14,12,.9); z-index:100;
+  display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px;
+}
+#caja-loading.show { display:flex; }
+#caja-loading .caja-spinner {
+  width:36px; height:36px; border:3px solid rgba(201,168,76,.2);
+  border-top-color:var(--gold); border-radius:50%; animation:caja-spin .8s linear infinite;
+}
+@keyframes caja-spin { to { transform:rotate(360deg); } }
+/* Reportes charts */
+#screen-caja .caja-bar-chart { display:flex; align-items:flex-end; gap:4px; height:120px; padding-top:10px; }
+#screen-caja .caja-bar-col { display:flex; flex-direction:column; align-items:center; flex:1; }
+#screen-caja .caja-bar { width:100%; background:rgba(201,168,76,.3); border-radius:4px 4px 0 0; min-height:4px; transition:height .3s; }
+#screen-caja .caja-bar-label { font-size:9px; color:var(--text-muted); margin-top:4px; }
+#screen-caja .caja-donut-wrap { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+#screen-caja .caja-legend { display:flex; flex-direction:column; gap:6px; font-size:11px; }
+#screen-caja .caja-legend-item { display:flex; align-items:center; gap:6px; }
+#screen-caja .caja-legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+/* Page header */
+#screen-caja .caja-page-header { margin-bottom:16px; }
+#screen-caja .caja-page-header h1 { font-size:20px; font-weight:700; color:var(--text); margin-bottom:4px; }
+#screen-caja .caja-page-header p { font-size:12px; color:var(--text-muted); }
+/* Change password overlay */
+#caja-chpass-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:50;
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+#caja-chpass-overlay.show { display:flex; }
+#caja-chpass-box {
+  background:var(--dark3); border:1px solid var(--border); border-radius:14px;
+  padding:24px; width:100%; max-width:340px;
+}
+
 </style>
 <style>
 /* ═══ GESTIÓN DE PERSONAL ═══ */
@@ -563,7 +778,7 @@ td,th{background:#211f1b!important;color:#e8e0d0!important;}
         <span class="module-arrow">›</span>
       </div>
 
-      <div class="module-btn active-module" onclick="window.location.href='la-matiarca-caja.html'">
+      <div class="module-btn active-module" onclick="abrirCaja()">
         <span class="module-icon">💰</span>
         <div class="module-name">Ventas & Caja</div>
         <div class="module-desc">Ingresos, cierres, reportes y P&G</div>
@@ -1030,7 +1245,9 @@ td,th{background:#211f1b!important;color:#e8e0d0!important;}
       </div>
       <div class="cedula-slot" onclick="P_triggerPhoto('trasera')">
         <img id="img-trasera" class="hidden"/>
-        <div <script>
+        <div class="cedula-slot-placeholder" i<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
 const _store={};
 const SafeStorage={
   getItem(k){try{return localStorage.getItem(k);}catch(e){return _store[k]||null;}},
@@ -1076,7 +1293,7 @@ function openModule(name){
   if(name==='personal') P_initPersonal();
 }
 function goHome(){
-  ['proveedores','reservas','personal'].forEach(m=>{
+  ['proveedores','reservas','personal','caja'].forEach(m=>{
     const el=document.getElementById('screen-'+m);
     if(el) el.style.display='none';
   });
@@ -2182,6 +2399,362 @@ ${sectionsHTML}
   La Matriarca Barranquilla · Informe generado automáticamente desde el Sistema de Gestión de Personal
 </div>
 \u003cscript\u003esetTimeout(()=>window.print(),300);\u003c\/script\u003e
+
+<!-- ══════════════════════════════════════════════
+     MÓDULO VENTAS & CAJA — La Matriarca
+     Construido desde cero para La Matriarca
+══════════════════════════════════════════════ -->
+<div id="screen-caja">
+
+<!-- TOAST -->
+<div id="caja-toast"></div>
+
+<!-- LOADING -->
+<div id="caja-loading">
+  <div class="caja-spinner"></div>
+  <div style="color:#9a9080;font-size:13px;font-family:'DM Sans',sans-serif;">Conectando con Firebase...</div>
+</div>
+
+<!-- CAMBIAR CONTRASEÑA OVERLAY -->
+<div id="caja-chpass-overlay">
+  <div id="caja-chpass-box">
+    <h3 style="color:#e8e0d0;font-size:16px;margin-bottom:16px;">🔑 Cambiar Contraseña</h3>
+    <div class="caja-field" style="margin-bottom:10px;">
+      <label>Perfil</label>
+      <select id="caja-chpass-role" style="background:#211f1a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:10px;color:#e8e0d0;font-family:'DM Sans',sans-serif;width:100%;">
+        <option value="cajera">Cajera</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div class="caja-field" style="margin-bottom:10px;">
+      <label>Contraseña actual (Admin)</label>
+      <div class="caja-pass-wrap">
+        <input type="password" id="caja-chpass-actual" placeholder="Contraseña admin actual">
+        <button class="caja-eye-btn" onclick="CAJA_toggleEye('caja-chpass-actual',this)">👁</button>
+      </div>
+    </div>
+    <div class="caja-field" style="margin-bottom:10px;">
+      <label>Nueva contraseña</label>
+      <div class="caja-pass-wrap">
+        <input type="password" id="caja-chpass-nueva" placeholder="Nueva contraseña">
+        <button class="caja-eye-btn" onclick="CAJA_toggleEye('caja-chpass-nueva',this)">👁</button>
+      </div>
+    </div>
+    <div class="caja-field" style="margin-bottom:14px;">
+      <label>Confirmar nueva contraseña</label>
+      <div class="caja-pass-wrap">
+        <input type="password" id="caja-chpass-conf" placeholder="Confirmar contraseña">
+        <button class="caja-eye-btn" onclick="CAJA_toggleEye('caja-chpass-conf',this)">👁</button>
+      </div>
+    </div>
+    <div id="caja-chpass-error" style="color:#c94c4c;font-size:12px;min-height:18px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="caja-btn caja-btn-outline" onclick="CAJA_cerrarChpass()" style="flex:1;">Cancelar</button>
+      <button class="caja-btn caja-btn-gold" onclick="CAJA_cambiarPass()" style="flex:1;">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div id="caja-login-screen" class="caja-login-wrap">
+  <div class="caja-login-box">
+    <div class="caja-login-logo">La Matriarca</div>
+    <div class="caja-login-sub">BARRANQUILLA · VENTAS & CAJA</div>
+    <div class="caja-role-btns">
+      <button class="caja-role-btn" id="caja-role-cajera" onclick="CAJA_selectRole('cajera')">
+        <span class="caja-role-icon">👩‍💼</span>Cajera
+      </button>
+      <button class="caja-role-btn" id="caja-role-admin" onclick="CAJA_selectRole('admin')">
+        <span class="caja-role-icon">👔</span>Administrador
+      </button>
+    </div>
+    <div class="caja-pass-wrap">
+      <input type="password" id="caja-login-pass" placeholder="Contraseña" 
+        onkeydown="if(event.key==='Enter') CAJA_doLogin()">
+      <button class="caja-eye-btn" onclick="CAJA_toggleEye('caja-login-pass',this)">👁</button>
+    </div>
+    <div id="caja-login-error" class="caja-login-error"></div>
+    <button class="caja-btn caja-btn-gold" style="width:100%;" onclick="CAJA_doLogin()">Ingresar →</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="caja-app" style="display:none;">
+
+  <!-- TOPBAR -->
+  <div class="caja-topbar">
+    <div class="caja-topbar-left">
+      <button onclick="goHome()" style="background:#1a1714;border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:6px 12px;color:#c9a84c;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">← Inicio</button>
+      <div>
+        <div class="caja-topbar-brand">LA MATRIARCA</div>
+        <div class="caja-topbar-sub">VENTAS & CAJA</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="caja-date-display" id="caja-fecha-hoy"></div>
+      <div class="caja-user-badge" id="caja-user-badge" style="cursor:pointer;" onclick="CAJA_toggleUserMenu()">
+        <div class="caja-avatar" id="caja-avatar">?</div>
+        <div>
+          <div class="caja-badge-name" id="caja-badge-name">-</div>
+          <div class="caja-badge-role" id="caja-badge-role">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER MENU DROPDOWN -->
+  <div id="caja-user-menu" style="display:none;position:fixed;top:56px;right:12px;z-index:30;background:#1a1714;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px;min-width:180px;">
+    <button onclick="CAJA_abrirChpass()" style="width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:#e8e0d0;font-size:12px;cursor:pointer;border-radius:6px;font-family:'DM Sans',sans-serif;">🔑 Cambiar contraseña</button>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,.06);margin:4px 0;">
+    <button onclick="CAJA_doLogout()" style="width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:#c94c4c;font-size:12px;cursor:pointer;border-radius:6px;font-family:'DM Sans',sans-serif;">↩ Cerrar sesión</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="caja-content">
+
+    <!-- ══ PAGE: INGRESO ══ -->
+    <div class="caja-page active" id="caja-page-ingreso">
+      <div class="caja-page-header">
+        <h1>Cuadre de Caja</h1>
+        <p id="caja-cuadre-sub">Ingresa los valores del turno para cuadrar la caja del día</p>
+      </div>
+
+      <div id="caja-locked-banner" class="caja-locked-banner" style="display:none;">
+        🔒 Cuadre cerrado — solo lectura. Solo el Administrador puede editarlo.
+      </div>
+
+      <!-- Info turno -->
+      <div class="caja-card">
+        <div class="caja-card-title">📋 Información del Turno</div>
+        <div class="caja-grid-3">
+          <div class="caja-field">
+            <label>Fecha</label>
+            <input type="date" id="caja-fecha" class="money" onchange="CAJA_autoCargar(this.value)">
+          </div>
+          <div class="caja-field">
+            <label>Responsable de Caja</label>
+            <input type="text" id="caja-cajero" placeholder="Nombre de la cajera">
+          </div>
+          <div class="caja-field">
+            <label>Propina General ($)</label>
+            <input type="number" id="caja-propina" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+
+      <!-- Ventas -->
+      <div class="caja-card">
+        <div class="caja-card-title">💳 Ventas por Medio de Pago</div>
+        <div class="caja-grid-4">
+          <div class="caja-field">
+            <label>Efectivo ($)</label>
+            <input type="number" id="caja-v-efectivo" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Datáfono ($)</label>
+            <input type="number" id="caja-v-datafono" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Transferencias ($)</label>
+            <input type="number" id="caja-v-transferencia" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>CxC ($)</label>
+            <input type="number" id="caja-v-cxc" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+        </div>
+        <hr class="caja-divider">
+        <div class="caja-grid-3">
+          <div class="caja-stat"><div class="caja-stat-label">Total con Propina</div><div class="caja-stat-val gold" id="caja-total-medios">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Total sin Propina</div><div class="caja-stat-val" id="caja-total-sin-propina">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Propina General</div><div class="caja-stat-val" id="caja-propina-show">$0</div></div>
+        </div>
+      </div>
+
+      <!-- Datáfono -->
+      <div class="caja-card">
+        <div class="caja-card-title">🏦 Relación Datáfonos (Cierre)</div>
+        <div class="caja-grid-3">
+          <div class="caja-field">
+            <label>Cierre Datáfono ($)</label>
+            <input type="number" id="caja-cierre-datafono" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Reportado Redeban ($)</label>
+            <input type="number" id="caja-redeban-datafono" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Diferencia Datáfono</label>
+            <input type="number" id="caja-dif-datafono" readonly style="color:#9a9080;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Anticipos -->
+      <div class="caja-card">
+        <div class="caja-card-title">📌 Anticipos y Efectivo de Terceros</div>
+        <div class="caja-grid-3">
+          <div class="caja-field">
+            <label>Anticipos - Efectivo ($)</label>
+            <input type="number" id="caja-anticipo-ef" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Anticipos - Otros Medios ($)</label>
+            <input type="number" id="caja-anticipo-otros" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Efectivo de Terceros ($)</label>
+            <input type="number" id="caja-ef-terceros" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+
+      <!-- Egresos -->
+      <div class="caja-card">
+        <div class="caja-card-title">📤 Egresos del Día</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+          <button class="caja-btn caja-btn-gold caja-btn-sm" onclick="CAJA_agregarEgreso()">+ Agregar egreso</button>
+          <span id="caja-egr-conteo" style="font-size:11px;color:#9a9080;margin-left:auto;"></span>
+        </div>
+        <div id="caja-egresos-lista"></div>
+        <hr class="caja-divider">
+        <div class="caja-grid-3">
+          <div class="caja-stat"><div class="caja-stat-label">Total Egresos</div><div class="caja-stat-val red" id="caja-total-egresos">$0</div></div>
+          <div class="caja-field">
+            <label>Traslado Caja Fuerte ($)</label>
+            <input type="number" id="caja-traslado" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-stat"><div class="caja-stat-label">Saldo Anterior</div><div class="caja-stat-val" id="caja-saldo-ant-show">$0</div><div style="font-size:10px;color:#9a9080;" id="caja-saldo-ant-info"></div></div>
+        </div>
+      </div>
+
+      <!-- Conteo físico -->
+      <div class="caja-card">
+        <div class="caja-card-title">💵 Conteo Físico de Caja</div>
+        <div class="caja-grid-2">
+          <div>
+            <div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Billetes</div>
+            <div class="caja-bill-row"><span class="caja-denom">$100.000</span><input type="number" id="caja-b100" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s100">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$50.000</span><input type="number" id="caja-b50" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s50">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$20.000</span><input type="number" id="caja-b20" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s20">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$10.000</span><input type="number" id="caja-b10" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s10">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$5.000</span><input type="number" id="caja-b5" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s5">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$2.000</span><input type="number" id="caja-b2" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s2">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$1.000</span><input type="number" id="caja-b1" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s1">$0</span></div>
+            <hr class="caja-divider">
+            <div class="caja-bill-row"><span class="caja-denom" style="color:#e8e0d0;">Total Billetes</span><span></span><span class="caja-subtotal" style="color:#e8e0d0;font-size:14px;" id="caja-total-billetes">$0</span></div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Monedas</div>
+            <div class="caja-bill-row"><span class="caja-denom">$1.000</span><input type="number" id="caja-m1000" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm1000">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$500</span><input type="number" id="caja-m500" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm500">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$200</span><input type="number" id="caja-m200" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm200">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$100</span><input type="number" id="caja-m100" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm100">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$50</span><input type="number" id="caja-m50" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm50">$0</span></div>
+            <hr class="caja-divider">
+            <div class="caja-bill-row"><span class="caja-denom" style="color:#e8e0d0;">Total Monedas</span><span></span><span class="caja-subtotal" style="color:#e8e0d0;font-size:14px;" id="caja-total-monedas">$0</span></div>
+            <div style="height:16px;"></div>
+            <div class="caja-bill-row"><span class="caja-denom" style="color:#c9a84c;font-size:14px;">TOTAL EFECTIVO</span><span></span><span class="caja-subtotal" style="color:#c9a84c;font-size:15px;font-weight:700;" id="caja-total-conteo">$0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resultado cuadre -->
+      <div class="caja-card">
+        <div class="caja-card-title">⚖️ Resultado del Cuadre</div>
+        <div class="caja-grid-4">
+          <div class="caja-stat"><div class="caja-stat-label">Saldo Final Calculado</div><div class="caja-stat-val gold" id="caja-saldo-final">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Conteo Físico</div><div class="caja-stat-val" id="caja-conteo-fisico">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Sobrante / Faltante</div><div class="caja-stat-val" id="caja-sobrante">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Estado</div><div id="caja-estado-cuadre"><span class="caja-badge caja-badge-gold">Pendiente</span></div></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding-bottom:30px;flex-wrap:wrap;" id="caja-action-btns">
+        <button class="caja-btn caja-btn-outline" onclick="CAJA_limpiarForm()" id="caja-btn-limpiar">Limpiar</button>
+        <button class="caja-btn caja-btn-gold" onclick="CAJA_guardar()" id="caja-btn-guardar">💾 Guardar Cuadre</button>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: HISTORIAL ══ -->
+    <div class="caja-page" id="caja-page-historial">
+      <div class="caja-page-header">
+        <h1>Historial de Cuadres</h1>
+        <p>Registro de todos los cierres guardados</p>
+      </div>
+      <div class="caja-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div class="caja-card-title" style="margin:0;">📅 Registros</div>
+          <input type="month" id="caja-filtro-mes" style="background:#211f1a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 12px;color:#e8e0d0;font-family:'DM Sans',sans-serif;font-size:12px;" onchange="CAJA_renderHistorial()">
+        </div>
+        <div id="caja-historial-tabla"></div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: REPORTES ══ -->
+    <div class="caja-page" id="caja-page-reportes">
+      <div class="caja-page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div><h1>Reportes & Análisis</h1><p>Ventas, promedios y tendencias</p></div>
+        <div class="caja-field" style="flex:0 0 160px;margin:0;">
+          <label>Mes</label>
+          <input type="month" id="caja-filtro-mes-rep" style="background:#211f1a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:9px;color:#e8e0d0;font-family:'DM Sans',sans-serif;font-size:12px;width:100%;" onchange="CAJA_renderReportes()">
+        </div>
+      </div>
+      <div class="caja-grid-4" id="caja-kpis" style="margin-bottom:14px;"></div>
+      <div class="caja-grid-2" style="margin-bottom:14px;">
+        <div class="caja-card" style="margin:0;"><div class="caja-card-title">📊 Ventas por Día</div><div class="caja-bar-chart" id="caja-chart-ventas"></div></div>
+        <div class="caja-card" style="margin:0;"><div class="caja-card-title">💳 Mix de Medios de Pago</div><div id="caja-chart-medios" style="margin-top:8px;"></div></div>
+      </div>
+      <div class="caja-card"><div class="caja-card-title">📋 Resumen por Semana</div><div id="caja-tabla-semanal"></div></div>
+    </div>
+
+    <!-- ══ PAGE: ADMIN ══ -->
+    <div class="caja-page" id="caja-page-admin">
+      <div class="caja-page-header">
+        <h1>Administración</h1>
+        <p>Solo disponible para el Administrador</p>
+      </div>
+      <div class="caja-card">
+        <div class="caja-card-title">🔑 Contraseñas</div>
+        <p style="font-size:12px;color:#9a9080;margin-bottom:14px;">Cambia las contraseñas de acceso para cada perfil.</p>
+        <button class="caja-btn caja-btn-outline" onclick="CAJA_abrirChpass()">Cambiar contraseña</button>
+      </div>
+      <div class="caja-card">
+        <div class="caja-card-title">🗑️ Eliminar Registros</div>
+        <p style="font-size:12px;color:#9a9080;margin-bottom:14px;">Elimina los registros de un mes específico de Firebase.</p>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="caja-field" style="flex:0 0 160px;margin:0;">
+            <label>Mes a eliminar</label>
+            <input type="month" id="caja-limpiar-mes" style="background:#211f1a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:9px;color:#e8e0d0;font-family:'DM Sans',sans-serif;font-size:12px;width:100%;">
+          </div>
+          <div>
+            <button class="caja-btn caja-btn-red" onclick="CAJA_eliminarMes()">🗑️ Eliminar mes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /caja-content -->
+
+  <!-- BOTTOM NAV -->
+  <div class="caja-nav" id="caja-nav">
+    <button class="caja-nav-btn active" data-page="ingreso" onclick="CAJA_showPage('ingreso')">
+      <span class="caja-nav-icon">💰</span>Ingreso
+    </button>
+    <button class="caja-nav-btn" data-page="historial" onclick="CAJA_showPage('historial')">
+      <span class="caja-nav-icon">📋</span>Historial
+    </button>
+    <button class="caja-nav-btn" data-page="reportes" onclick="CAJA_showPage('reportes')">
+      <span class="caja-nav-icon">📊</span>Reportes
+    </button>
+    <button class="caja-nav-btn" id="caja-nav-admin" data-page="admin" onclick="CAJA_showPage('admin')" style="display:none;">
+      <span class="caja-nav-icon">⚙️</span>Admin
+    </button>
+  </div>
+
+</div><!-- /caja-app -->
+</div><!-- /screen-caja -->
+
 </body></html>`;
 
   P_closeExportModal();
@@ -2215,8 +2788,13 @@ window.P_renderList=P_renderList;
 window.P_renderDepts=P_renderDepts;
 window.P_showToast=P_showToast;
 
-tExcel;
-window.P_setFilter=P_setFilter;
+function abrirCaja(){
+  document.getElementById('screen-home').style.display='none';
+  document.getElementById('screen-caja').style.display='block';
+  if(typeof CAJA_initModule==='function') CAJA_initModule();
+}
+
+ilter;
 window.P_openDetail=P_openDetail;
 window.P_editCurrent=P_editCurrent;
 window.P_deleteCurrent=P_deleteCurrent;
@@ -2230,6 +2808,914 @@ window.P_goTo=P_goTo;
 window.P_renderList=P_renderList;
 window.P_renderDepts=P_renderDepts;
 window.P_showToast=P_showToast;
+
+
+// ═══════════════════════════════════════════════════════════
+// MÓDULO VENTAS & CAJA — La Matriarca
+// Firebase: la-matriarca-6ada3
+// ═══════════════════════════════════════════════════════════
+
+// ── Firebase ────────────────────────────────────────────────
+const CAJA_fbConfig = {
+  apiKey: "AIzaSyCbiiYiVaLLXPOuErHiPG_aXmAZV6OwvRY",
+  authDomain: "la-matriarca-6ada3.firebaseapp.com",
+  projectId: "la-matriarca-6ada3",
+  storageBucket: "la-matriarca-6ada3.firebasestorage.app",
+  messagingSenderId: "990184760753",
+  appId: "1:990184760753:web:82990548dc776dd8948990"
+};
+let CAJA_db = null;
+const CAJA_COL = 'cuadres';
+const CAJA_PASS_KEY  = 'lm_caja_passes';
+const CAJA_NAMES_KEY = 'lm_caja_names';
+let CAJA_cache = [];
+let CAJA_cacheLoaded = false;
+let CAJA_egresoId = 0;
+let CAJA_currentUser = null;
+let CAJA_selectedRole = null;
+const CAJA_MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// ── Init Firebase ─────────────────────────────────────────
+function CAJA_initFB(){
+  if(CAJA_db) return;
+  try{
+    if(typeof firebase==='undefined') return;
+    // Find existing app or init new one
+    let app;
+    try{ app = firebase.app('caja'); }
+    catch(e){ app = firebase.initializeApp(CAJA_fbConfig, 'caja'); }
+    CAJA_db = app.firestore();
+  }catch(e){ console.warn('CAJA Firebase:', e.message); }
+}
+function CAJA_initModule(){
+  CAJA_initFB();
+  // Set today's date display
+  const now = new Date();
+  const el = document.getElementById('caja-fecha-hoy');
+  if(el) el.textContent = now.toLocaleDateString('es-CO',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase();
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function CAJA_n(id){ return parseFloat(document.getElementById(id)?.value)||0; }
+function CAJA_fmt(v){ return '$'+(Math.round(v||0)).toLocaleString('es-CO'); }
+function CAJA_fmtSigned(v){
+  const s = Math.round(v||0);
+  return (s>=0?'+':'')+s.toLocaleString('es-CO');
+}
+function CAJA_toast(msg){
+  const t = document.getElementById('caja-toast');
+  if(!t) return;
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+function CAJA_loading(show){
+  const el = document.getElementById('caja-loading');
+  if(el) el.classList.toggle('show', show);
+}
+function CAJA_get(id){ return document.getElementById(id); }
+function CAJA_val(id){ return (document.getElementById(id)?.value||'').trim(); }
+function CAJA_set(id, v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+function CAJA_setVal(id, v){ const el=document.getElementById(id); if(el) el.value=v||''; }
+function CAJA_getData(){ return CAJA_cache; }
+
+// ── Passwords & Users ──────────────────────────────────────
+function CAJA_getPasswords(){
+  try{ const r=localStorage.getItem(CAJA_PASS_KEY); if(r) return JSON.parse(r); }catch(e){}
+  return { cajera:'caja2024', admin:'admin2024' };
+}
+function CAJA_savePasswords(obj){
+  try{ localStorage.setItem(CAJA_PASS_KEY, JSON.stringify(obj)); }catch(e){}
+}
+function CAJA_getNames(){
+  try{ const r=localStorage.getItem(CAJA_NAMES_KEY); if(r) return JSON.parse(r); }catch(e){}
+  return { cajera:'Cajera', admin:'Administrador' };
+}
+function CAJA_saveNames(obj){
+  try{ localStorage.setItem(CAJA_NAMES_KEY, JSON.stringify(obj)); }catch(e){}
+}
+
+// ── Login ──────────────────────────────────────────────────
+function CAJA_selectRole(role){
+  CAJA_selectedRole = role;
+  ['cajera','admin'].forEach(r=>{
+    const el = document.getElementById('caja-role-'+r);
+    if(el) el.classList.toggle('selected', r===role);
+  });
+  const names = CAJA_getNames();
+  const passEl = CAJA_get('caja-login-pass');
+  if(passEl){ passEl.placeholder = 'Contraseña de '+(role==='cajera'?names.cajera:'Admin'); }
+}
+function CAJA_toggleEye(inputId, btn){
+  const el = document.getElementById(inputId);
+  if(!el) return;
+  el.type = el.type==='password' ? 'text' : 'password';
+  btn.textContent = el.type==='password' ? '👁' : '🙈';
+}
+async function CAJA_doLogin(){
+  const pass  = CAJA_val('caja-login-pass');
+  const errEl = CAJA_get('caja-login-error');
+  if(errEl) errEl.textContent='';
+  if(!CAJA_selectedRole){ if(errEl) errEl.textContent='Selecciona un perfil'; return; }
+  const passwords = CAJA_getPasswords();
+  if(pass !== passwords[CAJA_selectedRole]){ if(errEl) errEl.textContent='Contraseña incorrecta'; return; }
+  const names = CAJA_getNames();
+  CAJA_currentUser = { role: CAJA_selectedRole, name: names[CAJA_selectedRole] };
+  // Update UI
+  const initials = (CAJA_currentUser.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  CAJA_set('caja-avatar', initials);
+  CAJA_set('caja-badge-name', CAJA_currentUser.name);
+  CAJA_set('caja-badge-role', CAJA_selectedRole==='admin'?'Administrador':'Cajera');
+  // Admin nav
+  const adminBtn = CAJA_get('caja-nav-admin');
+  if(adminBtn) adminBtn.style.display = CAJA_selectedRole==='admin' ? 'flex' : 'none';
+  // Show app
+  CAJA_get('caja-login-screen').style.display='none';
+  CAJA_get('caja-app').style.display='block';
+  CAJA_setVal('caja-login-pass','');
+  // Load from Firebase
+  await CAJA_loadFromFirebase();
+  CAJA_setTodayDate();
+  CAJA_renderHistorial();
+}
+function CAJA_doLogout(){
+  CAJA_currentUser=null; CAJA_selectedRole=null;
+  CAJA_get('caja-app').style.display='none';
+  CAJA_get('caja-login-screen').style.display='flex';
+  CAJA_get('caja-login-pass').value='';
+  CAJA_get('caja-login-error').textContent='';
+  ['cajera','admin'].forEach(r=>{ const el=CAJA_get('caja-role-'+r); if(el) el.classList.remove('selected'); });
+  CAJA_selectedRole=null;
+  CAJA_closeUserMenu();
+}
+function CAJA_toggleUserMenu(){
+  const m=CAJA_get('caja-user-menu'); if(m) m.style.display=m.style.display==='none'?'block':'none';
+}
+function CAJA_closeUserMenu(){ const m=CAJA_get('caja-user-menu'); if(m) m.style.display='none'; }
+document.addEventListener('click',function(e){
+  const badge=CAJA_get('caja-user-badge'), menu=CAJA_get('caja-user-menu');
+  if(menu && badge && !badge.contains(e.target) && !menu.contains(e.target)) menu.style.display='none';
+});
+
+// ── Firebase Load ──────────────────────────────────────────
+async function CAJA_loadFromFirebase(){
+  if(!CAJA_db){ CAJA_cacheLoaded=true; return; }
+  CAJA_loading(true);
+  try{
+    const snap = await CAJA_db.collection(CAJA_COL).orderBy('fecha').get();
+    CAJA_cache = snap.docs.map(d=>d.data());
+    CAJA_cacheLoaded = true;
+  }catch(e){ console.error('CAJA load:', e); CAJA_toast('⚠️ Error al cargar datos'); }
+  finally{ CAJA_loading(false); }
+}
+async function CAJA_saveToFirebase(registro){
+  if(!CAJA_db) return false;
+  try{
+    await CAJA_db.collection(CAJA_COL).doc(registro.fecha).set(registro);
+    const idx=CAJA_cache.findIndex(d=>d.fecha===registro.fecha);
+    if(idx>=0) CAJA_cache[idx]=registro; else CAJA_cache.push(registro);
+    CAJA_cache.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+    return true;
+  }catch(e){ console.error('CAJA save:', e); CAJA_toast('⚠️ Error al guardar'); return false; }
+}
+
+// ── Navigation ─────────────────────────────────────────────
+function CAJA_showPage(name){
+  document.querySelectorAll('#screen-caja .caja-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#screen-caja .caja-nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.page===name));
+  const page = CAJA_get('caja-page-'+name);
+  if(page) page.classList.add('active');
+  if(name==='historial') CAJA_renderHistorial();
+  if(name==='reportes') CAJA_renderReportes();
+  CAJA_closeUserMenu();
+}
+
+// ── Ingreso de Caja ────────────────────────────────────────
+function CAJA_setTodayDate(){
+  const today = new Date().toISOString().split('T')[0];
+  CAJA_setVal('caja-fecha', today);
+  CAJA_autoCargar(today);
+}
+function CAJA_autoCargar(fecha){
+  if(!fecha) return;
+  const existing = CAJA_cache.find(d=>d.fecha===fecha);
+  CAJA_limpiarForm(false);
+  CAJA_setVal('caja-fecha', fecha);
+  if(existing){
+    CAJA_cargarRegistro(existing);
+    CAJA_toast('📂 Registro cargado: '+fecha);
+  } else {
+    CAJA_cargarSaldoAnterior(fecha);
+  }
+}
+function CAJA_cargarSaldoAnterior(fecha){
+  const prevs = CAJA_cache.filter(d=>d.fecha<fecha).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  if(prevs.length){
+    const prev=prevs[0];
+    CAJA_set('caja-saldo-ant-show', CAJA_fmt(prev.saldo_final||0));
+    CAJA_set('caja-saldo-ant-info', '← '+prev.fecha);
+  } else {
+    CAJA_set('caja-saldo-ant-show','$0');
+    CAJA_set('caja-saldo-ant-info','Sin registros previos');
+  }
+}
+function CAJA_cargarRegistro(d){
+  const fields = {
+    'caja-fecha':d.fecha,'caja-cajero':d.cajero||'','caja-propina':d.propina||0,
+    'caja-v-efectivo':d.efectivo||0,'caja-v-datafono':d.datafono||0,
+    'caja-v-transferencia':d.transferencia||0,'caja-v-cxc':d.cxc||0,
+    'caja-cierre-datafono':d.cierre_datafono||0,'caja-redeban-datafono':d.redeban_datafono||0,
+    'caja-anticipo-ef':d.anticipo_ef||0,'caja-anticipo-otros':d.anticipo_otros||0,
+    'caja-ef-terceros':d.ef_terceros||0,'caja-traslado':d.traslado||0,
+    'caja-b100':d.b100||0,'caja-b50':d.b50||0,'caja-b20':d.b20||0,
+    'caja-b10':d.b10||0,'caja-b5':d.b5||0,'caja-b2':d.b2||0,'caja-b1':d.b1||0,
+    'caja-m1000':d.m1000||0,'caja-m500':d.m500||0,'caja-m200':d.m200||0,
+    'caja-m100':d.m100||0,'caja-m50':d.m50||0,
+  };
+  Object.entries(fields).forEach(([id,val])=>{ const el=CAJA_get(id); if(el&&val) el.value=val; });
+  // Egresos
+  CAJA_egresoId=0;
+  const lista=CAJA_get('caja-egresos-lista'); if(lista) lista.innerHTML='';
+  (d.egresos||[]).forEach(eg=>CAJA_agregarEgreso(eg.desc||'',eg.monto||0));
+  // Locked
+  const isAdmin = CAJA_currentUser?.role==='admin';
+  const locked = d.cerrado && !isAdmin;
+  CAJA_get('caja-locked-banner').style.display = locked?'flex':'none';
+  CAJA_get('caja-btn-guardar').style.display = locked?'none':'inline-flex';
+  // Calculations
+  CAJA_calcular();
+  CAJA_calcularConteo();
+}
+function CAJA_calcular(){
+  const ef=CAJA_n('caja-v-efectivo'), df=CAJA_n('caja-v-datafono'),
+        tr=CAJA_n('caja-v-transferencia'), cxc=CAJA_n('caja-v-cxc'),
+        prop=CAJA_n('caja-propina');
+  const total_med = ef+df+tr+cxc;
+  const sin_prop  = total_med-prop;
+  CAJA_set('caja-total-medios', CAJA_fmt(total_med));
+  CAJA_set('caja-total-sin-propina', CAJA_fmt(sin_prop));
+  CAJA_set('caja-propina-show', CAJA_fmt(prop));
+  const cierre=CAJA_n('caja-cierre-datafono'), redeban=CAJA_n('caja-redeban-datafono');
+  const dif_df = cierre-redeban;
+  const difEl=CAJA_get('caja-dif-datafono');
+  if(difEl){ difEl.value=Math.round(dif_df); difEl.style.color=Math.abs(dif_df)<=10000?'#4caa6e':'#c94c4c'; }
+  CAJA_calcularSaldoFinal();
+}
+function CAJA_calcularConteo(){
+  const bills=[[100,100000],[50,50000],[20,20000],[10,10000],[5,5000],[2,2000],[1,1000]];
+  const coins=[[1000,1000],[500,500],[200,200],[100,100],[50,50]];
+  let totalBill=0, totalCoin=0;
+  bills.forEach(([denom,val])=>{
+    const q=parseInt(CAJA_get('caja-b'+denom)?.value)||0;
+    const sub=q*val; totalBill+=sub;
+    CAJA_set('caja-s'+denom, CAJA_fmt(sub));
+  });
+  coins.forEach(([denom,val])=>{
+    const q=parseInt(CAJA_get('caja-m'+denom)?.value)||0;
+    const sub=q*val; totalCoin+=sub;
+    CAJA_set('caja-sm'+denom, CAJA_fmt(sub));
+  });
+  CAJA_set('caja-total-billetes', CAJA_fmt(totalBill));
+  CAJA_set('caja-total-monedas', CAJA_fmt(totalCoin));
+  CAJA_set('caja-total-conteo', CAJA_fmt(totalBill+totalCoin));
+  CAJA_calcularSaldoFinal();
+}
+function CAJA_calcularSaldoFinal(){
+  const ef=CAJA_n('caja-v-efectivo'), prop=CAJA_n('caja-propina'),
+        ae=CAJA_n('caja-anticipo-ef'), ao=CAJA_n('caja-anticipo-otros'),
+        eft=CAJA_n('caja-ef-terceros'), traslado=CAJA_n('caja-traslado');
+  const saldoAnt = parseFloat(CAJA_get('caja-saldo-ant-show')?.textContent?.replace(/[^0-9-]/g,'')||0);
+  // Egresos
+  let totalEgr=0;
+  document.querySelectorAll('#caja-egresos-lista .caja-egr-monto').forEach(el=>{
+    totalEgr+=parseFloat(el.value)||0;
+  });
+  CAJA_set('caja-total-egresos', CAJA_fmt(totalEgr));
+  CAJA_updateEgrConteo();
+  const saldoFinal = ef - prop - ae - totalEgr - traslado + eft + saldoAnt;
+  CAJA_set('caja-saldo-final', CAJA_fmt(saldoFinal));
+  // Conteo físico
+  const bills=[[100,100000],[50,50000],[20,20000],[10,10000],[5,5000],[2,2000],[1,1000]];
+  const coins=[[1000,1000],[500,500],[200,200],[100,100],[50,50]];
+  let conteo=0;
+  bills.forEach(([d])=>{ conteo+=(parseInt(CAJA_get('caja-b'+d)?.value)||0)*(d*1000); });
+  // Fix: use actual values
+  conteo=0;
+  [[100,100000],[50,50000],[20,20000],[10,10000],[5,5000],[2,2000],[1,1000]].forEach(([d,v])=>{
+    conteo+=(parseInt(CAJA_get('caja-b'+d)?.value)||0)*v;
+  });
+  [[1000,1000],[500,500],[200,200],[100,100],[50,50]].forEach(([d,v])=>{
+    conteo+=(parseInt(CAJA_get('caja-m'+d)?.value)||0)*v;
+  });
+  CAJA_set('caja-conteo-fisico', CAJA_fmt(conteo));
+  const sobrante = conteo - saldoFinal;
+  CAJA_set('caja-sobrante', CAJA_fmt(sobrante));
+  const estadoEl=CAJA_get('caja-estado-cuadre');
+  if(estadoEl){
+    const ok=Math.abs(sobrante)<=10000;
+    estadoEl.innerHTML=ok
+      ?'<span class="caja-badge caja-badge-green">✓ Cuadrado</span>'
+      :'<span class="caja-badge caja-badge-red">✗ Descuadre</span>';
+  }
+}
+function CAJA_updateEgrConteo(){
+  const items=document.querySelectorAll('#caja-egresos-lista .caja-egr-item').length;
+  CAJA_set('caja-egr-conteo', items>0?items+' egreso'+(items===1?'':'s'):'');
+}
+
+// ── Egresos ────────────────────────────────────────────────
+function CAJA_agregarEgreso(desc,monto){
+  CAJA_egresoId++;
+  const id=CAJA_egresoId;
+  const lista=CAJA_get('caja-egresos-lista'); if(!lista) return;
+  const div=document.createElement('div');
+  div.className='caja-egr-item open';
+  div.id='caja-egr-'+id;
+  div.innerHTML=`
+    <div class="caja-egr-header" onclick="document.getElementById('caja-egr-${id}').classList.toggle('open')">
+      <span class="caja-egr-num">${id}</span>
+      <span style="flex:1;font-size:12px;color:#e8e0d0;" id="caja-egr-desc-label-${id}">${desc||'Nuevo egreso'}</span>
+      <span style="font-size:12px;color:#c9a84c;margin-right:8px;" id="caja-egr-monto-label-${id}">${monto?CAJA_fmt(monto):''}</span>
+      <button onclick="event.stopPropagation();CAJA_eliminarEgreso(${id})" style="background:none;border:none;color:#c94c4c;cursor:pointer;font-size:14px;">✕</button>
+    </div>
+    <div class="caja-egr-body">
+      <div class="caja-grid-2" style="gap:8px;">
+        <div class="caja-field" style="margin:0;">
+          <label>Descripción</label>
+          <input type="text" placeholder="Descripción del egreso" value="${desc||''}"
+            oninput="CAJA_get('caja-egr-desc-label-${id}').textContent=this.value||'Egreso ${id}'">
+        </div>
+        <div class="caja-field" style="margin:0;">
+          <label>Monto ($)</label>
+          <input type="number" class="caja-egr-monto" placeholder="0" value="${monto||''}" inputmode="numeric"
+            oninput="CAJA_get('caja-egr-monto-label-${id}').textContent=this.value?CAJA_fmt(this.value):'';CAJA_calcularSaldoFinal()">
+        </div>
+      </div>
+    </div>`;
+  lista.appendChild(div);
+  CAJA_calcularSaldoFinal();
+}
+function CAJA_eliminarEgreso(id){
+  const el=CAJA_get('caja-egr-'+id); if(el) el.remove();
+  CAJA_calcularSaldoFinal();
+}
+
+// ── Limpiar formulario ─────────────────────────────────────
+function CAJA_limpiarForm(setDate=true){
+  const inputs=[
+    'caja-v-efectivo','caja-v-datafono','caja-v-transferencia','caja-v-cxc','caja-propina',
+    'caja-cierre-datafono','caja-redeban-datafono','caja-dif-datafono',
+    'caja-anticipo-ef','caja-anticipo-otros','caja-ef-terceros','caja-traslado',
+    'caja-b100','caja-b50','caja-b20','caja-b10','caja-b5','caja-b2','caja-b1',
+    'caja-m1000','caja-m500','caja-m200','caja-m100','caja-m50','caja-cajero'
+  ];
+  inputs.forEach(id=>{ const el=CAJA_get(id); if(el) el.value=''; });
+  const lista=CAJA_get('caja-egresos-lista'); if(lista) lista.innerHTML='';
+  CAJA_egresoId=0;
+  CAJA_get('caja-locked-banner').style.display='none';
+  CAJA_get('caja-btn-guardar').style.display='inline-flex';
+  CAJA_calcular(); CAJA_calcularConteo();
+  if(setDate) CAJA_setTodayDate();
+}
+
+// ── Guardar ────────────────────────────────────────────────
+async function CAJA_guardar(){
+  const fecha=CAJA_val('caja-fecha');
+  if(!fecha){ CAJA_toast('⚠️ Ingresa la fecha del turno'); return; }
+  // Build egresos array
+  const egresos=[];
+  document.querySelectorAll('#caja-egresos-lista .caja-egr-item').forEach(item=>{
+    const inputs=item.querySelectorAll('input');
+    if(inputs.length>=2){
+      const desc=inputs[0].value||'', monto=parseFloat(inputs[1].value)||0;
+      if(desc||monto) egresos.push({desc,monto});
+    }
+  });
+  const registro={
+    fecha, cajero:CAJA_val('caja-cajero'), propina:CAJA_n('caja-propina'),
+    efectivo:CAJA_n('caja-v-efectivo'), datafono:CAJA_n('caja-v-datafono'),
+    transferencia:CAJA_n('caja-v-transferencia'), cxc:CAJA_n('caja-v-cxc'),
+    total_ventas:CAJA_n('caja-v-efectivo')+CAJA_n('caja-v-datafono')+CAJA_n('caja-v-transferencia')+CAJA_n('caja-v-cxc'),
+    cierre_datafono:CAJA_n('caja-cierre-datafono'), redeban_datafono:CAJA_n('caja-redeban-datafono'),
+    anticipo_ef:CAJA_n('caja-anticipo-ef'), anticipo_otros:CAJA_n('caja-anticipo-otros'),
+    ef_terceros:CAJA_n('caja-ef-terceros'), traslado:CAJA_n('caja-traslado'),
+    egresos,
+    b100:CAJA_n('caja-b100'),b50:CAJA_n('caja-b50'),b20:CAJA_n('caja-b20'),
+    b10:CAJA_n('caja-b10'),b5:CAJA_n('caja-b5'),b2:CAJA_n('caja-b2'),b1:CAJA_n('caja-b1'),
+    m1000:CAJA_n('caja-m1000'),m500:CAJA_n('caja-m500'),m200:CAJA_n('caja-m200'),
+    m100:CAJA_n('caja-m100'),m50:CAJA_n('caja-m50'),
+    saldo_final: parseFloat((CAJA_get('caja-saldo-final')?.textContent||'0').replace(/[^0-9-]/g,'')||0),
+    sobrante: parseFloat((CAJA_get('caja-sobrante')?.textContent||'0').replace(/[^0-9-]/g,'')||0),
+    cerrado: CAJA_currentUser?.role!=='admin',
+    guardadoPor: CAJA_currentUser?.name||'',
+    guardadoEn: new Date().toISOString()
+  };
+  const ok = await CAJA_saveToFirebase(registro);
+  if(ok){
+    CAJA_toast('✅ Cuadre guardado — '+fecha);
+    CAJA_renderHistorial();
+    if(registro.cerrado){ CAJA_get('caja-locked-banner').style.display='flex'; CAJA_get('caja-btn-guardar').style.display='none'; }
+  }
+}
+
+// ── Historial ──────────────────────────────────────────────
+function CAJA_renderHistorial(){
+  const mes  = CAJA_get('caja-filtro-mes')?.value||'';
+  const cont = CAJA_get('caja-historial-tabla'); if(!cont) return;
+  let data = CAJA_cache;
+  if(mes) data=data.filter(d=>d.fecha.startsWith(mes));
+  if(!data.length){ cont.innerHTML='<div style="text-align:center;padding:40px;color:#9a9080;">No hay registros'+(mes?' para este mes':'')+'</div>'; return; }
+  const rows=[...data].reverse().map(d=>{
+    const ok=Math.abs(d.sobrante||0)<=10000;
+    const dt=new Date(d.fecha+'T12:00');
+    const fmtFecha=dt.toLocaleDateString('es-CO',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+    return `<tr>
+      <td data-label="Fecha">${fmtFecha}</td>
+      <td class="num" data-label="Ventas" style="color:#c9a84c;">${CAJA_fmt(d.total_ventas||0)}</td>
+      <td class="num" data-label="Efectivo">${CAJA_fmt(d.efectivo||0)}</td>
+      <td class="num" data-label="Datáfono">${CAJA_fmt(d.datafono||0)}</td>
+      <td data-label="Estado" style="text-align:center;"><span class="caja-badge ${ok?'caja-badge-green':'caja-badge-red'}">${ok?'✓ OK':'✗ Desc'}</span></td>
+      <td style="text-align:center;"><button onclick="CAJA_verDia('${d.fecha}')" style="background:none;border:1px solid rgba(201,168,76,.3);border-radius:6px;padding:4px 10px;color:#c9a84c;font-size:11px;cursor:pointer;">Ver</button></td>
+    </tr>`;
+  }).join('');
+  cont.innerHTML=`<table class="caja-table"><thead><tr><th>Fecha</th><th>Ventas</th><th>Efectivo</th><th>Datáfono</th><th>Estado</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function CAJA_verDia(fecha){
+  CAJA_showPage('ingreso');
+  CAJA_setVal('caja-fecha', fecha);
+  CAJA_autoCargar(fecha);
+}
+
+// ── Reportes ───────────────────────────────────────────────
+function CAJA_renderReportes(){
+  const mes  = CAJA_get('caja-filtro-mes-rep')?.value||'';
+  let data   = CAJA_cache;
+  if(mes) data=data.filter(d=>d.fecha.startsWith(mes));
+  // KPIs
+  const totalVentas=data.reduce((s,d)=>s+(d.total_ventas||0),0);
+  const totalDias=data.length;
+  const promDia=totalDias?totalVentas/totalDias:0;
+  const kpisEl=CAJA_get('caja-kpis');
+  if(kpisEl) kpisEl.innerHTML=[
+    ['💰 Ventas Totales', CAJA_fmt(totalVentas), 'gold'],
+    ['📅 Días Registrados', totalDias, ''],
+    ['📊 Promedio Diario', CAJA_fmt(promDia), 'green'],
+    ['💵 Total Efectivo', CAJA_fmt(data.reduce((s,d)=>s+(d.efectivo||0),0)), ''],
+  ].map(([l,v,c])=>`<div class="caja-stat"><div class="caja-stat-label">${l}</div><div class="caja-stat-val ${c}">${v}</div></div>`).join('');
+  // Bar chart
+  const chartEl=CAJA_get('caja-chart-ventas');
+  if(chartEl && data.length){
+    const maxV=Math.max(...data.map(d=>d.total_ventas||0))||1;
+    chartEl.innerHTML=data.slice(-14).map(d=>{
+      const pct=Math.round(((d.total_ventas||0)/maxV)*100);
+      const day=new Date(d.fecha+'T12:00').toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit'});
+      return `<div class="caja-bar-col"><div class="caja-bar" style="height:${pct}%"></div><div class="caja-bar-label">${day}</div></div>`;
+    }).join('');
+  }
+  // Medios donut
+  const mediosEl=CAJA_get('caja-chart-medios');
+  if(mediosEl){
+    const totEf=data.reduce((s,d)=>s+(d.efectivo||0),0);
+    const totDf=data.reduce((s,d)=>s+(d.datafono||0),0);
+    const totTr=data.reduce((s,d)=>s+(d.transferencia||0),0);
+    const totCxc=data.reduce((s,d)=>s+(d.cxc||0),0);
+    const total=totEf+totDf+totTr+totCxc||1;
+    const items=[['Efectivo',totEf,'#4caa6e'],['Datáfono',totDf,'#4c8ec9'],['Transferencia',totTr,'#c9a84c'],['CxC',totCxc,'#c97a4c']].filter(i=>i[1]>0);
+    mediosEl.innerHTML=`<div class="caja-donut-wrap"><div class="caja-legend">${items.map(([n,v,c])=>`<div class="caja-legend-item"><div class="caja-legend-dot" style="background:${c}"></div><span>${n}: ${Math.round(v/total*100)}%</span></div>`).join('')}</div></div>`;
+  }
+  // Tabla semanal
+  const semEl=CAJA_get('caja-tabla-semanal');
+  if(semEl && data.length){
+    const semanas={};
+    data.forEach(d=>{
+      const dt=new Date(d.fecha+'T12:00');
+      const sem=`Semana ${Math.ceil(dt.getDate()/7)}`;
+      if(!semanas[sem]) semanas[sem]={ventas:0,dias:0};
+      semanas[sem].ventas+=d.total_ventas||0;
+      semanas[sem].dias++;
+    });
+    const rows=Object.entries(semanas).map(([s,v])=>`<tr><td>${s}</td><td class="num" style="color:#c9a84c;">${CAJA_fmt(v.ventas)}</td><td class="num">${v.dias}</td><td class="num">${CAJA_fmt(v.dias?v.ventas/v.dias:0)}</td></tr>`).join('');
+    semEl.innerHTML=`<table class="caja-table"><thead><tr><th>Semana</th><th>Ventas</th><th>Días</th><th>Promedio</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+}
+
+// ── Admin ───────────────────────────────────────────────────
+function CAJA_abrirChpass(){ const el=CAJA_get('caja-chpass-overlay'); if(el) el.classList.add('show'); CAJA_closeUserMenu(); }
+function CAJA_cerrarChpass(){ const el=CAJA_get('caja-chpass-overlay'); if(el) el.classList.remove('show'); }
+function CAJA_cambiarPass(){
+  const role    = CAJA_get('caja-chpass-role')?.value;
+  const actual  = CAJA_val('caja-chpass-actual');
+  const nueva   = CAJA_val('caja-chpass-nueva');
+  const conf    = CAJA_val('caja-chpass-conf');
+  const errEl   = CAJA_get('caja-chpass-error');
+  if(errEl) errEl.textContent='';
+  const passes  = CAJA_getPasswords();
+  if(actual !== passes['admin']){ if(errEl) errEl.textContent='Contraseña admin incorrecta'; return; }
+  if(nueva.length<4){ if(errEl) errEl.textContent='Mínimo 4 caracteres'; return; }
+  if(nueva !== conf){ if(errEl) errEl.textContent='Las contraseñas no coinciden'; return; }
+  passes[role]=nueva;
+  CAJA_savePasswords(passes);
+  CAJA_toast('✅ Contraseña actualizada');
+  CAJA_cerrarChpass();
+  ['caja-chpass-actual','caja-chpass-nueva','caja-chpass-conf'].forEach(id=>CAJA_setVal(id,''));
+}
+async function CAJA_eliminarMes(){
+  const mes=CAJA_val('caja-limpiar-mes');
+  if(!mes){ CAJA_toast('⚠️ Selecciona un mes'); return; }
+  if(!confirm('¿Eliminar todos los registros de '+mes+'? Esta acción no se puede deshacer.')) return;
+  if(!CAJA_db){ CAJA_toast('⚠️ Sin conexión a Firebase'); return; }
+  CAJA_loading(true);
+  try{
+    const snap=await CAJA_db.collection(CAJA_COL).where('fecha','>=',mes+'-01').where('fecha','<=',mes+'-31').get();
+    const batch=CAJA_db.batch();
+    snap.docs.forEach(doc=>batch.delete(doc.ref));
+    await batch.commit();
+    CAJA_cache=CAJA_cache.filter(d=>!d.fecha.startsWith(mes));
+    CAJA_toast('✅ Registros de '+mes+' eliminados');
+    CAJA_renderHistorial();
+  }catch(e){ CAJA_toast('⚠️ Error: '+e.message); }
+  finally{ CAJA_loading(false); }
+}
+
+// ── Expose to window ───────────────────────────────────────
+window.CAJA_initModule     = CAJA_initModule;
+window.CAJA_selectRole     = CAJA_selectRole;
+window.CAJA_toggleEye      = CAJA_toggleEye;
+window.CAJA_doLogin        = CAJA_doLogin;
+window.CAJA_doLogout       = CAJA_doLogout;
+window.CAJA_toggleUserMenu = CAJA_toggleUserMenu;
+window.CAJA_showPage       = CAJA_showPage;
+window.CAJA_autoCargar     = CAJA_autoCargar;
+window.CAJA_calcular       = CAJA_calcular;
+window.CAJA_calcularConteo = CAJA_calcularConteo;
+window.CAJA_agregarEgreso  = CAJA_agregarEgreso;
+window.CAJA_eliminarEgreso = CAJA_eliminarEgreso;
+window.CAJA_guardar        = CAJA_guardar;
+window.CAJA_limpiarForm    = CAJA_limpiarForm;
+window.CAJA_renderHistorial= CAJA_renderHistorial;
+window.CAJA_renderReportes = CAJA_renderReportes;
+window.CAJA_verDia         = CAJA_verDia;
+window.CAJA_abrirChpass    = CAJA_abrirChpass;
+window.CAJA_cerrarChpass   = CAJA_cerrarChpass;
+window.CAJA_cambiarPass    = CAJA_cambiarPass;
+window.CAJA_eliminarMes    = CAJA_eliminarMes;
+window.CAJA_fmt            = CAJA_fmt;
+
 </script>
+
+<!-- ══════════════════════════════════════════════
+     MÓDULO VENTAS & CAJA — La Matriarca
+     Construido desde cero para La Matriarca
+══════════════════════════════════════════════ -->
+<div id="screen-caja">
+
+<!-- TOAST -->
+<div id="caja-toast"></div>
+
+<!-- LOADING -->
+<div id="caja-loading">
+  <div class="caja-spinner"></div>
+  <div style="color:#9a9080;font-size:13px;font-family:'DM Sans',sans-serif;">Conectando con Firebase...</div>
+</div>
+
+<!-- CAMBIAR CONTRASEÑA OVERLAY -->
+<div id="caja-chpass-overlay">
+  <div id="caja-chpass-box">
+    <h3 style="color:#e8e0d0;font-size:16px;margin-bottom:16px;">🔑 Cambiar Contraseña</h3>
+    <div class="caja-field" style="margin-bottom:10px;">
+      <label>Perfil</label>
+      <select id="caja-chpass-role" style="background:#211f1a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:10px;color:#e8e0d0;font-family:'DM Sans',sans-serif;width:100%;">
+        <option value="cajera">Cajera</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div class="caja-field" style="margin-bottom:10px;">
+      <label>Contraseña actual (Admin)</label>
+      <div class="caja-pass-wrap">
+        <input type="password" id="caja-chpass-actual" placeholder="Contraseña admin actual">
+        <button class="caja-eye-btn" onclick="CAJA_toggleEye('caja-chpass-actual',this)">👁</button>
+      </div>
+    </div>
+    <div class="caja-field" style="margin-bottom:10px;">
+      <label>Nueva contraseña</label>
+      <div class="caja-pass-wrap">
+        <input type="password" id="caja-chpass-nueva" placeholder="Nueva contraseña">
+        <button class="caja-eye-btn" onclick="CAJA_toggleEye('caja-chpass-nueva',this)">👁</button>
+      </div>
+    </div>
+    <div class="caja-field" style="margin-bottom:14px;">
+      <label>Confirmar nueva contraseña</label>
+      <div class="caja-pass-wrap">
+        <input type="password" id="caja-chpass-conf" placeholder="Confirmar contraseña">
+        <button class="caja-eye-btn" onclick="CAJA_toggleEye('caja-chpass-conf',this)">👁</button>
+      </div>
+    </div>
+    <div id="caja-chpass-error" style="color:#c94c4c;font-size:12px;min-height:18px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="caja-btn caja-btn-outline" onclick="CAJA_cerrarChpass()" style="flex:1;">Cancelar</button>
+      <button class="caja-btn caja-btn-gold" onclick="CAJA_cambiarPass()" style="flex:1;">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div id="caja-login-screen" class="caja-login-wrap">
+  <div class="caja-login-box">
+    <div class="caja-login-logo">La Matriarca</div>
+    <div class="caja-login-sub">BARRANQUILLA · VENTAS & CAJA</div>
+    <div class="caja-role-btns">
+      <button class="caja-role-btn" id="caja-role-cajera" onclick="CAJA_selectRole('cajera')">
+        <span class="caja-role-icon">👩‍💼</span>Cajera
+      </button>
+      <button class="caja-role-btn" id="caja-role-admin" onclick="CAJA_selectRole('admin')">
+        <span class="caja-role-icon">👔</span>Administrador
+      </button>
+    </div>
+    <div class="caja-pass-wrap">
+      <input type="password" id="caja-login-pass" placeholder="Contraseña" 
+        onkeydown="if(event.key==='Enter') CAJA_doLogin()">
+      <button class="caja-eye-btn" onclick="CAJA_toggleEye('caja-login-pass',this)">👁</button>
+    </div>
+    <div id="caja-login-error" class="caja-login-error"></div>
+    <button class="caja-btn caja-btn-gold" style="width:100%;" onclick="CAJA_doLogin()">Ingresar →</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="caja-app" style="display:none;">
+
+  <!-- TOPBAR -->
+  <div class="caja-topbar">
+    <div class="caja-topbar-left">
+      <button onclick="goHome()" style="background:#1a1714;border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:6px 12px;color:#c9a84c;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">← Inicio</button>
+      <div>
+        <div class="caja-topbar-brand">LA MATRIARCA</div>
+        <div class="caja-topbar-sub">VENTAS & CAJA</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="caja-date-display" id="caja-fecha-hoy"></div>
+      <div class="caja-user-badge" id="caja-user-badge" style="cursor:pointer;" onclick="CAJA_toggleUserMenu()">
+        <div class="caja-avatar" id="caja-avatar">?</div>
+        <div>
+          <div class="caja-badge-name" id="caja-badge-name">-</div>
+          <div class="caja-badge-role" id="caja-badge-role">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER MENU DROPDOWN -->
+  <div id="caja-user-menu" style="display:none;position:fixed;top:56px;right:12px;z-index:30;background:#1a1714;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px;min-width:180px;">
+    <button onclick="CAJA_abrirChpass()" style="width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:#e8e0d0;font-size:12px;cursor:pointer;border-radius:6px;font-family:'DM Sans',sans-serif;">🔑 Cambiar contraseña</button>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,.06);margin:4px 0;">
+    <button onclick="CAJA_doLogout()" style="width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:#c94c4c;font-size:12px;cursor:pointer;border-radius:6px;font-family:'DM Sans',sans-serif;">↩ Cerrar sesión</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="caja-content">
+
+    <!-- ══ PAGE: INGRESO ══ -->
+    <div class="caja-page active" id="caja-page-ingreso">
+      <div class="caja-page-header">
+        <h1>Cuadre de Caja</h1>
+        <p id="caja-cuadre-sub">Ingresa los valores del turno para cuadrar la caja del día</p>
+      </div>
+
+      <div id="caja-locked-banner" class="caja-locked-banner" style="display:none;">
+        🔒 Cuadre cerrado — solo lectura. Solo el Administrador puede editarlo.
+      </div>
+
+      <!-- Info turno -->
+      <div class="caja-card">
+        <div class="caja-card-title">📋 Información del Turno</div>
+        <div class="caja-grid-3">
+          <div class="caja-field">
+            <label>Fecha</label>
+            <input type="date" id="caja-fecha" class="money" onchange="CAJA_autoCargar(this.value)">
+          </div>
+          <div class="caja-field">
+            <label>Responsable de Caja</label>
+            <input type="text" id="caja-cajero" placeholder="Nombre de la cajera">
+          </div>
+          <div class="caja-field">
+            <label>Propina General ($)</label>
+            <input type="number" id="caja-propina" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+
+      <!-- Ventas -->
+      <div class="caja-card">
+        <div class="caja-card-title">💳 Ventas por Medio de Pago</div>
+        <div class="caja-grid-4">
+          <div class="caja-field">
+            <label>Efectivo ($)</label>
+            <input type="number" id="caja-v-efectivo" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Datáfono ($)</label>
+            <input type="number" id="caja-v-datafono" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Transferencias ($)</label>
+            <input type="number" id="caja-v-transferencia" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>CxC ($)</label>
+            <input type="number" id="caja-v-cxc" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+        </div>
+        <hr class="caja-divider">
+        <div class="caja-grid-3">
+          <div class="caja-stat"><div class="caja-stat-label">Total con Propina</div><div class="caja-stat-val gold" id="caja-total-medios">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Total sin Propina</div><div class="caja-stat-val" id="caja-total-sin-propina">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Propina General</div><div class="caja-stat-val" id="caja-propina-show">$0</div></div>
+        </div>
+      </div>
+
+      <!-- Datáfono -->
+      <div class="caja-card">
+        <div class="caja-card-title">🏦 Relación Datáfonos (Cierre)</div>
+        <div class="caja-grid-3">
+          <div class="caja-field">
+            <label>Cierre Datáfono ($)</label>
+            <input type="number" id="caja-cierre-datafono" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Reportado Redeban ($)</label>
+            <input type="number" id="caja-redeban-datafono" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Diferencia Datáfono</label>
+            <input type="number" id="caja-dif-datafono" readonly style="color:#9a9080;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Anticipos -->
+      <div class="caja-card">
+        <div class="caja-card-title">📌 Anticipos y Efectivo de Terceros</div>
+        <div class="caja-grid-3">
+          <div class="caja-field">
+            <label>Anticipos - Efectivo ($)</label>
+            <input type="number" id="caja-anticipo-ef" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Anticipos - Otros Medios ($)</label>
+            <input type="number" id="caja-anticipo-otros" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-field">
+            <label>Efectivo de Terceros ($)</label>
+            <input type="number" id="caja-ef-terceros" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+
+      <!-- Egresos -->
+      <div class="caja-card">
+        <div class="caja-card-title">📤 Egresos del Día</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+          <button class="caja-btn caja-btn-gold caja-btn-sm" onclick="CAJA_agregarEgreso()">+ Agregar egreso</button>
+          <span id="caja-egr-conteo" style="font-size:11px;color:#9a9080;margin-left:auto;"></span>
+        </div>
+        <div id="caja-egresos-lista"></div>
+        <hr class="caja-divider">
+        <div class="caja-grid-3">
+          <div class="caja-stat"><div class="caja-stat-label">Total Egresos</div><div class="caja-stat-val red" id="caja-total-egresos">$0</div></div>
+          <div class="caja-field">
+            <label>Traslado Caja Fuerte ($)</label>
+            <input type="number" id="caja-traslado" placeholder="0" oninput="CAJA_calcular()" inputmode="numeric">
+          </div>
+          <div class="caja-stat"><div class="caja-stat-label">Saldo Anterior</div><div class="caja-stat-val" id="caja-saldo-ant-show">$0</div><div style="font-size:10px;color:#9a9080;" id="caja-saldo-ant-info"></div></div>
+        </div>
+      </div>
+
+      <!-- Conteo físico -->
+      <div class="caja-card">
+        <div class="caja-card-title">💵 Conteo Físico de Caja</div>
+        <div class="caja-grid-2">
+          <div>
+            <div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Billetes</div>
+            <div class="caja-bill-row"><span class="caja-denom">$100.000</span><input type="number" id="caja-b100" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s100">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$50.000</span><input type="number" id="caja-b50" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s50">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$20.000</span><input type="number" id="caja-b20" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s20">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$10.000</span><input type="number" id="caja-b10" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s10">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$5.000</span><input type="number" id="caja-b5" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s5">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$2.000</span><input type="number" id="caja-b2" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s2">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$1.000</span><input type="number" id="caja-b1" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-s1">$0</span></div>
+            <hr class="caja-divider">
+            <div class="caja-bill-row"><span class="caja-denom" style="color:#e8e0d0;">Total Billetes</span><span></span><span class="caja-subtotal" style="color:#e8e0d0;font-size:14px;" id="caja-total-billetes">$0</span></div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Monedas</div>
+            <div class="caja-bill-row"><span class="caja-denom">$1.000</span><input type="number" id="caja-m1000" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm1000">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$500</span><input type="number" id="caja-m500" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm500">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$200</span><input type="number" id="caja-m200" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm200">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$100</span><input type="number" id="caja-m100" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm100">$0</span></div>
+            <div class="caja-bill-row"><span class="caja-denom">$50</span><input type="number" id="caja-m50" min="0" placeholder="0" oninput="CAJA_calcularConteo()"><span class="caja-subtotal" id="caja-sm50">$0</span></div>
+            <hr class="caja-divider">
+            <div class="caja-bill-row"><span class="caja-denom" style="color:#e8e0d0;">Total Monedas</span><span></span><span class="caja-subtotal" style="color:#e8e0d0;font-size:14px;" id="caja-total-monedas">$0</span></div>
+            <div style="height:16px;"></div>
+            <div class="caja-bill-row"><span class="caja-denom" style="color:#c9a84c;font-size:14px;">TOTAL EFECTIVO</span><span></span><span class="caja-subtotal" style="color:#c9a84c;font-size:15px;font-weight:700;" id="caja-total-conteo">$0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resultado cuadre -->
+      <div class="caja-card">
+        <div class="caja-card-title">⚖️ Resultado del Cuadre</div>
+        <div class="caja-grid-4">
+          <div class="caja-stat"><div class="caja-stat-label">Saldo Final Calculado</div><div class="caja-stat-val gold" id="caja-saldo-final">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Conteo Físico</div><div class="caja-stat-val" id="caja-conteo-fisico">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Sobrante / Faltante</div><div class="caja-stat-val" id="caja-sobrante">$0</div></div>
+          <div class="caja-stat"><div class="caja-stat-label">Estado</div><div id="caja-estado-cuadre"><span class="caja-badge caja-badge-gold">Pendiente</span></div></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding-bottom:30px;flex-wrap:wrap;" id="caja-action-btns">
+        <button class="caja-btn caja-btn-outline" onclick="CAJA_limpiarForm()" id="caja-btn-limpiar">Limpiar</button>
+        <button class="caja-btn caja-btn-gold" onclick="CAJA_guardar()" id="caja-btn-guardar">💾 Guardar Cuadre</button>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: HISTORIAL ══ -->
+    <div class="caja-page" id="caja-page-historial">
+      <div class="caja-page-header">
+        <h1>Historial de Cuadres</h1>
+        <p>Registro de todos los cierres guardados</p>
+      </div>
+      <div class="caja-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div class="caja-card-title" style="margin:0;">📅 Registros</div>
+          <input type="month" id="caja-filtro-mes" style="background:#211f1a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 12px;color:#e8e0d0;font-family:'DM Sans',sans-serif;font-size:12px;" onchange="CAJA_renderHistorial()">
+        </div>
+        <div id="caja-historial-tabla"></div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: REPORTES ══ -->
+    <div class="caja-page" id="caja-page-reportes">
+      <div class="caja-page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div><h1>Reportes & Análisis</h1><p>Ventas, promedios y tendencias</p></div>
+        <div class="caja-field" style="flex:0 0 160px;margin:0;">
+          <label>Mes</label>
+          <input type="month" id="caja-filtro-mes-rep" style="background:#211f1a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:9px;color:#e8e0d0;font-family:'DM Sans',sans-serif;font-size:12px;width:100%;" onchange="CAJA_renderReportes()">
+        </div>
+      </div>
+      <div class="caja-grid-4" id="caja-kpis" style="margin-bottom:14px;"></div>
+      <div class="caja-grid-2" style="margin-bottom:14px;">
+        <div class="caja-card" style="margin:0;"><div class="caja-card-title">📊 Ventas por Día</div><div class="caja-bar-chart" id="caja-chart-ventas"></div></div>
+        <div class="caja-card" style="margin:0;"><div class="caja-card-title">💳 Mix de Medios de Pago</div><div id="caja-chart-medios" style="margin-top:8px;"></div></div>
+      </div>
+      <div class="caja-card"><div class="caja-card-title">📋 Resumen por Semana</div><div id="caja-tabla-semanal"></div></div>
+    </div>
+
+    <!-- ══ PAGE: ADMIN ══ -->
+    <div class="caja-page" id="caja-page-admin">
+      <div class="caja-page-header">
+        <h1>Administración</h1>
+        <p>Solo disponible para el Administrador</p>
+      </div>
+      <div class="caja-card">
+        <div class="caja-card-title">🔑 Contraseñas</div>
+        <p style="font-size:12px;color:#9a9080;margin-bottom:14px;">Cambia las contraseñas de acceso para cada perfil.</p>
+        <button class="caja-btn caja-btn-outline" onclick="CAJA_abrirChpass()">Cambiar contraseña</button>
+      </div>
+      <div class="caja-card">
+        <div class="caja-card-title">🗑️ Eliminar Registros</div>
+        <p style="font-size:12px;color:#9a9080;margin-bottom:14px;">Elimina los registros de un mes específico de Firebase.</p>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="caja-field" style="flex:0 0 160px;margin:0;">
+            <label>Mes a eliminar</label>
+            <input type="month" id="caja-limpiar-mes" style="background:#211f1a;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:9px;color:#e8e0d0;font-family:'DM Sans',sans-serif;font-size:12px;width:100%;">
+          </div>
+          <div>
+            <button class="caja-btn caja-btn-red" onclick="CAJA_eliminarMes()">🗑️ Eliminar mes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /caja-content -->
+
+  <!-- BOTTOM NAV -->
+  <div class="caja-nav" id="caja-nav">
+    <button class="caja-nav-btn active" data-page="ingreso" onclick="CAJA_showPage('ingreso')">
+      <span class="caja-nav-icon">💰</span>Ingreso
+    </button>
+    <button class="caja-nav-btn" data-page="historial" onclick="CAJA_showPage('historial')">
+      <span class="caja-nav-icon">📋</span>Historial
+    </button>
+    <button class="caja-nav-btn" data-page="reportes" onclick="CAJA_showPage('reportes')">
+      <span class="caja-nav-icon">📊</span>Reportes
+    </button>
+    <button class="caja-nav-btn" id="caja-nav-admin" data-page="admin" onclick="CAJA_showPage('admin')" style="display:none;">
+      <span class="caja-nav-icon">⚙️</span>Admin
+    </button>
+  </div>
+
+</div><!-- /caja-app -->
+</div><!-- /screen-caja -->
+
 </body>
 </html>
