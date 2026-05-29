@@ -314,7 +314,7 @@ td,th{background:#211f1b!important;color:#e8e0d0!important;}
 <!-- ═══ SCREEN 1: DEPARTMENTS ═══ -->
 <div class="screen active" id="s-depts">
   <div class="hdr">
-    <button onclick="goHome()" style="display:inline-flex;align-items:center;gap:5px;background:#1a1714;border:1px solid rgba(201,168,76,.4);border-radius:20px;padding:7px 14px;color:#c9a84c;font-size:12px;font-weight:600;cursor:pointer;font-family:sans-serif;margin-right:8px;">← Inicio</button>
+    <button onclick="window.location.replace('https://memofontalvo-ai.github.io/LA-MATRIARCA-/')" style="display:inline-flex;align-items:center;gap:6px;background:#1a1714;border:2px solid rgba(201,168,76,.5);border-radius:20px;padding:8px 16px;color:#c9a84c;font-size:13px;font-weight:700;cursor:pointer;font-family:sans-serif;text-decoration:none;">&#8592; Inicio</button>
     <div class="hdr-mid">
       <h2>👥 Gestión de Personal</h2>
       <span>La Matriarca · Barranquilla</span>
@@ -339,7 +339,7 @@ td,th{background:#211f1b!important;color:#e8e0d0!important;}
 <!-- ═══ SCREEN 2: EMPLOYEE LIST ═══ -->
 <div class="screen" id="s-list">
   <div class="hdr">
-    <button class="back-btn" onclick="goTo('s-depts')">← Volver</button>
+    <a href="https://memofontalvo-ai.github.io/LA-MATRIARCA-/" style="display:inline-flex;align-items:center;gap:5px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.4);border-radius:20px;padding:6px 12px;color:#c9a84c;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;margin-right:6px;">&#8962; Inicio</a><button class="back-btn" onclick="goTo('s-depts')">← Volver</button>
     <div class="hdr-mid">
       <h2 id="list-title">Empleados</h2>
       <span id="list-sub">Departamento</span>
@@ -365,7 +365,7 @@ td,th{background:#211f1b!important;color:#e8e0d0!important;}
 <!-- ═══ SCREEN 3: EMPLOYEE DETAIL ═══ -->
 <div class="screen" id="s-detail">
   <div class="hdr">
-    <button class="back-btn" onclick="goTo('s-list')">← Volver</button>
+    <a href="https://memofontalvo-ai.github.io/LA-MATRIARCA-/" style="display:inline-flex;align-items:center;gap:5px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.4);border-radius:20px;padding:6px 12px;color:#c9a84c;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;margin-right:6px;">&#8962; Inicio</a><button class="back-btn" onclick="goTo('s-list')">← Volver</button>
     <div class="hdr-mid">
       <h2>Ficha del Empleado</h2>
       <span>La Matriarca</span>
@@ -968,8 +968,8 @@ const SafeStorage={
   setItem(k,v){try{localStorage.setItem(k,v);}catch(e){_store[k]=v;}}
 };
 function showToast(m){const t=document.getElementById('toast');if(t){t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}}
-function goHome(){window.location.href='index.html?v=13';}
-function LM_goHome(){goHome();}
+function goHome(){ window.location.replace('https://memofontalvo-ai.github.io/LA-MATRIARCA-/'); } function LM_goHome(){ goHome(); }
+function goHome(){ window.location.replace('https://memofontalvo-ai.github.io/LA-MATRIARCA-/'); } function LM_goHome(){ goHome(); }
 
 // ── Config ──────────────────────────────────────────────
 const DEPTS = {
