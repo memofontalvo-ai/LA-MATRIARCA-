@@ -314,7 +314,7 @@ td,th{background:#211f1b!important;color:#e8e0d0!important;}
 <!-- ═══ SCREEN 1: DEPARTMENTS ═══ -->
 <div class="screen active" id="s-depts">
   <div class="hdr">
-    <button class="back-btn" onclick="goHome()">← Inicio</button>
+    <button onclick="goHome()" style="display:inline-flex;align-items:center;gap:5px;background:#1a1714;border:1px solid rgba(201,168,76,.4);border-radius:20px;padding:7px 14px;color:#c9a84c;font-size:12px;font-weight:600;cursor:pointer;font-family:sans-serif;margin-right:8px;">← Inicio</button>
     <div class="hdr-mid">
       <h2>👥 Gestión de Personal</h2>
       <span>La Matriarca · Barranquilla</span>
@@ -968,7 +968,7 @@ const SafeStorage={
   setItem(k,v){try{localStorage.setItem(k,v);}catch(e){_store[k]=v;}}
 };
 function showToast(m){const t=document.getElementById('toast');if(t){t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}}
-function goHome(){window.location.href='index.html';}
+function goHome(){window.location.href='index.html?v=13';}
 function LM_goHome(){goHome();}
 
 // ── Config ──────────────────────────────────────────────
