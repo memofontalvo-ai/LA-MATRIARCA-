@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>La Matriarca · Personal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+
+:root{
+  --bg:#0f0e0c;--surface:#1a1814;--card:#211f1b;--border:#2e2b25;
+  --gold:#c9a84c;--gold2:#e8c96a;--cream:#f5edd8;--muted:#9a9080;--text:#e8e0d0;
+  --red:#c94c4c;--green:#4caa6e;--blue:#4c8ec9;
+  --admin:#c9a84c;--cocina:#c97a4c;--servicio:#4caa6e;--aseo:#4c8ec9;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#0f0e0c!important;color:#e8e0d0;font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* HEADER */
+.hdr{background:#1a1814;border-bottom:1px solid #2e2b25;padding:11px 16px;
+  display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;}
+.back-btn{display:flex;align-items:center;gap:5px;background:#211f1b;border:1px solid #2e2b25;
+  border-radius:20px;padding:6px 13px;color:#9a9080;font-size:12px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .2s;border:none;}
+.back-btn:hover{color:#c9a84c;}
+.hdr-mid{flex:1;}
+.hdr-mid h2{font-family:'Playfair Display',serif;font-size:15px;color:#f5edd8;}
+.hdr-mid span{font-size:10px;color:#9a9080;letter-spacing:1px;text-transform:uppercase;}
+.hdr-count{background:#211f1b;border:1px solid #2e2b25;border-radius:20px;
+  padding:4px 12px;font-size:11px;color:#9a9080;}
+.hdr-count b{color:#c9a84c;}
+
+/* SCREENS */
+.screen{display:none;background:#0f0e0c;min-height:100vh;} .screen.active{display:block;background:#0f0e0c;min-height:100vh;}
+
+/* ═══ SCREEN 1: DEPARTMENTS ═══ */
+.dept-hero{padding:24px 16px 16px;text-align:center;background:#0f0e0c;}
+.dept-hero h1{font-family:'Playfair Display',serif;font-size:22px;color:#f5edd8;margin-bottom:6px;}
+.dept-hero p{font-size:12px;color:#9a9080;}
+.dept-actions{display:flex;gap:8px;padding:0 16px 16px;flex-wrap:wrap;background:#0f0e0c;}
+.btn-import{display:flex;align-items:center;gap:6px;background:#211f1b;border:1px solid #2e2b25;
+  border-radius:8px;padding:9px 14px;color:#c9a84c;font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .2s;position:relative;flex:1;justify-content:center;}
+.btn-import input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.btn-import:hover{border-color:#c9a84c;}
+.btn-new{display:flex;align-items:center;gap:6px;background:#c9a84c;border:none;
+  border-radius:8px;padding:9px 16px;color:#0f0e0c;font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans',sans-serif;flex:1;justify-content:center;}
+.btn-new:hover{background:#e8c96a;}
+.btn-export{display:flex;align-items:center;gap:6px;background:#211f1b;border:1px solid #4caa6e;
+  border-radius:8px;padding:9px 14px;color:#4caa6e;font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans',sans-serif;flex:1;justify-content:center;transition:all .2s;}
+.btn-export:hover{background:rgba(76,170,110,.12);}
+
+.dept-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 24px;background:#0f0e0c;}
+@media(min-width:600px){.dept-grid{grid-template-columns:repeat(3,1fr);}}
+.dept-card{background:#211f1b;border:1px solid #2e2b25;border-radius:14px;
+  padding:20px 14px;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
+.dept-card::before{content:'';position:absolute;inset:0;opacity:0;
+  background:radial-gradient(circle at 50% 0%,rgba(201,168,76,.1),transparent 70%);transition:opacity .3s;}
+.dept-card:hover::before,.dept-card:active::before{opacity:1;}
+.dept-card:hover{border-color:var(--dc);transform:translateY(-2px);}
+.dept-card-icon{font-size:36px;margin-bottom:10px;display:block;}
+.dept-card-name{font-family:'Playfair Display',serif;font-size:13px;color:#f5edd8;margin-bottom:5px;line-height:1.3;}
+.dept-card-count{font-size:11px;color:#9a9080;}
+.dept-card-count b{font-size:16px;color:var(--dc);font-family:'Playfair Display',serif;}
+.dept-card-bar{height:3px;background:#2e2b25;border-radius:2px;margin-top:10px;overflow:hidden;}
+.dept-card-bar-fill{height:100%;border-radius:2px;background:var(--dc);}
+.dept-card.todos{grid-column:1/-1;display:flex;align-items:center;gap:14px;text-align:left;padding:16px;}
+.dept-card.todos .dept-card-icon{font-size:28px;margin:0;flex-shrink:0;}
+.dept-card.todos .dept-card-name{font-size:15px;}
+
+/* ═══ SCREEN 2: EMPLOYEE LIST ═══ */
+.list-dept-header{display:flex;align-items:center;gap:12px;padding:14px 16px;
+  border-bottom:1px solid #2e2b25;background:#1a1814!important;}
+.list-dept-icon{font-size:28px;}
+.list-dept-info h3{font-family:'Playfair Display',serif;font-size:16px;color:#f5edd8;}
+.list-dept-info p{font-size:11px;color:#9a9080;}
+
+.list-search{padding:12px 16px;background:#0f0e0c;}
+.list-search input{width:100%;background:#211f1b;border:1px solid #2e2b25;border-radius:8px;
+  color:#e8e0d0;padding:9px 13px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;}
+.list-search input:focus{border-color:#c9a84c;}
+
+.emp-list{padding:0 16px 24px;background:#0f0e0c;}
+.emp-row{display:flex;align-items:center;gap:12px;padding:12px;
+  background:#211f1b!important;border:1px solid #2e2b25;border-radius:10px;margin-bottom:8px;
+  cursor:pointer;transition:all .2s;}
+.emp-row:hover{border-color:#c9a84c;transform:translateX(2px);}
+.emp-av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+  font-family:'Playfair Display',serif;font-size:15px;font-weight:700;
+  color:#0f0e0c;flex-shrink:0;}
+.emp-row-info{flex:1;min-width:0;}
+.emp-row-name{font-size:13px;color:#f5edd8!important;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.emp-row-sub{font-size:11px;color:#a09585!important;margin-top:2px;}
+.emp-row-status{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;flex-shrink:0;}
+.s-activo{background:rgba(76,170,110,.15);color:#4caa6e;}
+.s-vacaciones{background:rgba(201,168,76,.15);color:#c9a84c;}
+.s-incapacidad{background:rgba(201,76,76,.15);color:#c94c4c;}
+.s-inactivo{background:rgba(122,114,101,.15);color:#9a9080;}
+.emp-row-arrow{color:#9a9080;font-size:16px;flex-shrink:0;}
+
+/* ═══ SCREEN 3: EMPLOYEE DETAIL ═══ */
+.detail-hero{padding:18px 16px 14px;display:flex;align-items:center;gap:14px;
+  border-bottom:1px solid #2e2b25;background:#0f0e0c;}
+.detail-av{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+  font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#0f0e0c;flex-shrink:0;}
+.detail-name{font-family:'Playfair Display',serif;font-size:16px;color:#f5edd8;font-weight:700;line-height:1.2;}
+.detail-cargo{font-size:12px;color:#9a9080;margin-top:3px;}
+
+.detail-section{margin:12px 16px;background:#211f1b!important;border:1px solid #2e2b25;border-radius:12px;overflow:hidden;}
+.detail-section-title{display:flex;align-items:center;gap:8px;padding:11px 14px;
+  border-bottom:1px solid #2e2b25;font-size:11px;font-weight:600;
+  color:#c9a84c;text-transform:uppercase;letter-spacing:1.5px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.detail-cell{padding:11px 14px;border-bottom:1px solid #1a1814;background:#211f1b;}
+.detail-cell:nth-child(odd){border-right:1px solid #1a1814;}
+.detail-cell-lbl{font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.detail-cell-val{font-size:13px;color:#e8e0d0!important;font-weight:500;}
+
+/* Cedula photos */
+.cedula-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px;}
+.cedula-slot{border-radius:8px;overflow:hidden;background:#161412;border:1px dashed #2e2b25;
+  aspect-ratio:1.6;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;transition:border-color .2s;}
+.cedula-slot:hover{border-color:#c9a84c;}
+.cedula-slot input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.cedula-slot img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.cedula-slot-placeholder{text-align:center;pointer-events:none;}
+.cedula-slot-placeholder .icon{font-size:24px;margin-bottom:4px;}
+.cedula-slot-placeholder p{font-size:10px;color:#9a9080;}
+.cedula-lbl{font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:.5px;
+  padding:0 14px;margin-bottom:6px;margin-top:-2px;}
+
+/* Actions */
+.detail-actions{padding:12px 16px 24px;display:flex;flex-direction:column;gap:8px;background:#0f0e0c;}
+.btn-edit-full{background:#c9a84c;border:none;border-radius:10px;padding:13px;
+  color:#0f0e0c;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-edit-full:hover{background:#e8c96a;}
+.btn-del-full{background:transparent;border:1px solid #c94c4c;border-radius:10px;padding:12px;
+  color:#c94c4c;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-del-full:hover{background:rgba(201,76,76,.1);}
+
+/* ═══ MODAL FORM ═══ */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.82);
+  display:grid;place-items:center;z-index:200;padding:14px;}
+.modal-box{background:#211f1b;border:1px solid #2e2b25;border-radius:16px;
+  padding:20px;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;}
+.modal-box h2{font-family:'Playfair Display',serif;font-size:18px;color:#f5edd8;margin-bottom:3px;}
+.modal-box p{font-size:12px;color:#9a9080;margin-bottom:16px;}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.fg label{font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:1px;}
+.fg input,.fg select,.fg textarea{background:#161412;border:1px solid #2e2b25;border-radius:8px;
+  color:#e8e0d0;padding:8px 11px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#c9a84c;}
+.fg textarea{resize:vertical;min-height:60px;}
+.fg select option{background:#211f1b;}
+.fgrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.modal-acts{display:flex;gap:8px;margin-top:14px;}
+.m-cancel{flex:1;background:#161412;border:1px solid #2e2b25;border-radius:8px;
+  color:#9a9080;padding:10px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.m-save{flex:2;background:#c9a84c;border:none;border-radius:8px;
+  color:#0f0e0c;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.m-save:hover{background:#e8c96a;}
+
+.section-sep{font-size:10px;color:#c9a84c;text-transform:uppercase;letter-spacing:1.5px;
+  margin:12px 0 6px;font-weight:600;}
+
+/* Toast */
+.exp-opt{
+  width:100%;padding:11px 14px;border-radius:9px;border:1px solid #2e2b25;
+  background:#161412;color:#9a9080;font-size:13px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;text-align:left;transition:all .2s;
+}
+.exp-opt.active{background:rgba(201,168,76,.1);border-color:#c9a84c;color:#f5edd8;font-weight:600;}
+.exp-opt:hover:not(.active){border-color:#9a9080;color:#d0c8b8;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:#211f1b;border:1px solid #c9a84c;border-radius:10px;padding:10px 20px;
+  font-size:13px;color:#f5edd8;z-index:300;opacity:0;transition:all .3s;white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.ftab{
+  flex:1;padding:7px 6px;border-radius:8px;border:1px solid #2e2b25;
+  background:#211f1b;color:#9a9080;font-size:11px;font-weight:600;
+  cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;text-align:center;
+}
+.ftab.active{background:#2e2b25;color:#f5edd8;border-color:#3e3b35;}
+.ftab.extra.active{background:rgba(232,201,106,.12);color:#e8c96a;border-color:rgba(232,201,106,.3);}
+.ftab:hover:not(.active){color:#d0c8b8;}
+.hidden{display:none!important;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:#0f0e0c;}
+::-webkit-scrollbar-thumb{background:#2e2b25;border-radius:2px;}
+
+/* ── ANTI-WHITE OVERRIDE ── */
+#s-depts,#s-list,#s-detail{background:#0f0e0c!important;min-height:100vh;}
+.emp-list,.list-search,.dept-hero,.dept-actions,.dept-grid,.detail-actions{background:#0f0e0c!important;}
+.detail-hero{background:#0f0e0c!important;}
+td,th{background:#211f1b!important;color:#e8e0d0!important;}
+.detail-cell{background:#211f1b!important;}
+.detail-cell-lbl{color:#a09585!important;}
+.detail-cell-val{color:#e8e0d0!important;}
+.emp-row-name{color:#f5edd8!important;}
+.emp-row-sub{color:#a09585!important;}
+.dept-card-name{color:#f5edd8!important;}
+.dept-card-count{color:#a09585!important;}
+.dept-hero h1{color:#f5edd8!important;}
+.dept-hero p{color:#a09585!important;}
+.list-dept-info h3{color:#f5edd8!important;}
+.list-dept-info p{color:#a09585!important;}
+.detail-name{color:#f5edd8!important;}
+.detail-cargo{color:#a09585!important;}
+.detail-section-title{color:#c9a84c!important;}
+.hdr{background:#1a1814!important;}
+.hdr-mid h2{color:#f5edd8!important;}
+.hdr-mid span{color:#a09585!important;}
+
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-ov hidden" id="export-modal">
+<div class="modal-box" style="max-width:360px;">
+  <h2>📄 Exportar Informe</h2>
+  <p>Selecciona qué empleados incluir en el informe</p>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+    <button class="exp-opt active" id="exp-opt-todos" onclick="selectExportOpt('todos')">
+      👥 Todos los departamentos
+    </button>
+    <button class="exp-opt" id="exp-opt-administrativo" onclick="selectExportOpt('administrativo')">
+      🏢 Administrativo
+    </button>
+    <button class="exp-opt" id="exp-opt-cocina" onclick="selectExportOpt('cocina')">
+      🍳 Cocina (fijos + extras)
+    </button>
+    <button class="exp-opt" id="exp-opt-servicio" onclick="selectExportOpt('servicio')">
+      🛎️ Servicio y Ventas (fijos + extras)
+    </button>
+    <button class="exp-opt" id="exp-opt-aseo" onclick="selectExportOpt('aseo')">
+      🧹 Aseo y Mantenimiento (fijos + extras)
+    </button>
+  </div>
+  <div class="modal-acts">
+    <button class="m-cancel" onclick="closeExportModal()">Cancelar</button>
+    <button class="m-save" onclick="generateReport()" style="background:#4caa6e;">
+      📄 Generar e Imprimir
+    </button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL FORM -->
+<div class="modal-ov hidden" id="modal">
+<div class="modal-box">
+  <h2 id="m-title">Agregar Empleado</h2>
+  <p id="m-sub">Información del empleado</p>
+  <input type="hidden" id="f-id"/>
+  <div class="fg"><label>Nombre Completo *</label><input id="f-nombre" placeholder="Nombre y apellidos"/></div>
+  <div class="fgrow">
+    <div class="fg"><label>Cédula *</label><input id="f-cedula" placeholder="No. documento"/></div>
+    <div class="fg"><label>Cargo *</label><input id="f-cargo" placeholder="Ej: Mesero, Chef..."/></div>
+  </div>
+  <div class="fgrow">
+    <div class="fg"><label>Departamento</label>
+      <select id="f-depto">
+        <option value="administrativo">🏢 Administrativo</option>
+        <option value="cocina">🍳 Cocina</option>
+        <option value="servicio">🛎️ Servicio y Ventas</option>
+        <option value="aseo">🧹 Aseo y Mantenimiento</option>
+      </select>
+    </div>
+  </div>
+  <div class="fg">
+    <label>Tipo de Vinculación</label>
+    <select id="f-vinculo">
+      <option value="fijo">📋 Planta fija (con contrato)</option>
+      <option value="extra">⚡ Extra por día (sin contrato fijo)</option>
+    </select>
+  </div>
+  <div class="fgrow">
+    <div class="fg"><label>Teléfono</label><input id="f-tel" type="tel" placeholder="300 000 0000"/></div>
+    <div class="fg"><label>F. Nacimiento</label><input id="f-nac" type="date"/></div>
+  </div>
+  <div class="fgrow">
+    <div class="fg"><label>F. Ingreso</label><input id="f-ingreso" type="date"/></div>
+    <div class="fg"><label>Salario</label><input id="f-salario" type="number" placeholder="0"/></div>
+  </div>
+  <div class="section-sep">👕 Tallas de Dotación</div>
+  <div class="fgrow">
+    <div class="fg"><label>Camisa</label>
+      <select id="f-camisa">
+        <option value="">—</option>
+        <option>XS</option><option>S</option><option>M</option><option>L</option>
+        <option>XL</option><option>XXL</option><option>XXXL</option>
+      </select>
+    </div>
+    <div class="fg"><label>Pantalón</label><input id="f-pantalon" placeholder="Ej: 32, 34..."/></div>
+  </div>
+  <div class="fg" style="max-width:50%"><label>Zapatos (talla)</label><input id="f-zapatos" placeholder="Ej: 39, 42..."/></div>
+  <div class="fg"><label>Notas / Observaciones</label>
+    <textarea id="f-notas" placeholder="Información adicional..."></textarea>
+  </div>
+  <div class="modal-acts">
+    <button class="m-cancel" onclick="closeModal()">Cancelar</button>
+    <button class="m-save" onclick="saveEmp()">Guardar</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SCREEN 1: DEPARTMENTS ═══ -->
+<div class="screen active" id="s-depts">
+  <div class="hdr">
+    <div class="hdr-mid">
+      <h2>👥 Gestión de Personal</h2>
+      <span>La Matriarca · Barranquilla</span>
+    </div>
+    <div class="hdr-count">Total: <b id="total-count">0</b></div>
+  </div>
+  <div class="dept-hero">
+    <h1>Departamentos</h1>
+    <p>Selecciona un departamento para ver su personal</p>
+  </div>
+  <div class="dept-actions">
+    <label class="btn-import">
+      <input type="file" accept=".xlsx,.xls" onchange="importExcel(this)"/>
+      📊 Importar Excel
+    </label>
+    <button class="btn-export" onclick="openExportModal()">📄 Exportar Informe</button>
+    <button class="btn-new" onclick="openModal()">+ Nuevo Empleado</button>
+  </div>
+  <div class="dept-grid" id="dept-grid"></div>
+</div>
+
+<!-- ═══ SCREEN 2: EMPLOYEE LIST ═══ -->
+<div class="screen" id="s-list">
+  <div class="hdr">
+    <button class="back-btn" onclick="goTo('s-depts')">← Volver</button>
+    <div class="hdr-mid">
+      <h2 id="list-title">Empleados</h2>
+      <span id="list-sub">Departamento</span>
+    </div>
+    <button class="btn-new" style="padding:6px 12px;font-size:11px;" onclick="openModal()">+ Agregar</button>
+  </div>
+  <div class="list-dept-header">
+    <span class="list-dept-icon" id="list-icon">👥</span>
+    <div class="list-dept-info">
+      <h3 id="list-dept-name">Todos</h3>
+      <p id="list-dept-desc">Vista general</p>
+    </div>
+  </div>
+  <div class="list-search"><input id="search" placeholder="🔍  Buscar nombre, cargo, cédula..." oninput="renderList()"/></div>
+  <div id="filter-tabs" style="display:flex;gap:6px;padding:0 16px 12px;">
+    <button class="ftab active" data-f="todos"  onclick="setFilter('todos')">👥 Todos</button>
+    <button class="ftab"        data-f="fijos"  onclick="setFilter('fijos')">📋 Fijos</button>
+    <button class="ftab extra"  data-f="extras" onclick="setFilter('extras')">⚡ Extras</button>
+  </div>
+  <div class="emp-list" id="emp-list"></div>
+</div>
+
+<!-- ═══ SCREEN 3: EMPLOYEE DETAIL ═══ -->
+<div class="screen" id="s-detail">
+  <div class="hdr">
+    <button class="back-btn" onclick="goTo('s-list')">← Volver</button>
+    <div class="hdr-mid">
+      <h2>Ficha del Empleado</h2>
+      <span>La Matriarca</span>
+    </div>
+  </div>
+  <div class="detail-hero">
+    <div class="detail-av" id="d-av"></div>
+    <div>
+      <div class="detail-name" id="d-name"></div>
+      <div class="detail-cargo" id="d-cargo"></div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title">📋 Datos Personales</div>
+    <div class="detail-grid">
+      <div class="detail-cell"><div class="detail-cell-lbl">Cédula</div><div class="detail-cell-val" id="d-cedula">—</div></div>
+      <div class="detail-cell"><div class="detail-cell-lbl">Teléfono</div><div class="detail-cell-val" id="d-tel">—</div></div>
+      <div class="detail-cell"><div class="detail-cell-lbl">Nacimiento</div><div class="detail-cell-val" id="d-nac">—</div></div>
+      <div class="detail-cell"><div class="detail-cell-lbl">Ingreso</div><div class="detail-cell-val" id="d-ingreso">—</div></div>
+      <div class="detail-cell" style="grid-column:1/-1"><div class="detail-cell-lbl">Salario mensual</div><div class="detail-cell-val" id="d-salario" style="color:#4caa6e;font-size:15px;font-weight:700;">—</div></div>
+    </div>
+    <div id="d-notas-wrap" class="detail-cell hidden" style="grid-column:1/-1;border-top:1px solid #1a1814;">
+      <div class="detail-cell-lbl">Notas</div>
+      <div class="detail-cell-val" id="d-notas" style="color:#9a9080;font-size:12px;line-height:1.5;"></div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title">👕 Tallas de Dotación</div>
+    <div class="detail-grid">
+      <div class="detail-cell"><div class="detail-cell-lbl">Camisa</div><div class="detail-cell-val" id="d-camisa">—</div></div>
+      <div class="detail-cell"><div class="detail-cell-lbl">Pantalón</div><div class="detail-cell-val" id="d-pantalon">—</div></div>
+      <div class="detail-cell" style="border-bottom:none"><div class="detail-cell-lbl">Zapatos</div><div class="detail-cell-val" id="d-zapatos">—</div></div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title">🪪 Cédula</div>
+    <div style="padding:6px 14px 2px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+      <div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:.5px;">FRONTAL</div>
+      <div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:.5px;">TRASERA</div>
+    </div>
+    <div class="cedula-grid">
+      <div class="cedula-slot" onclick="triggerPhoto('frontal')">
+        <img id="img-frontal" class="hidden"/>
+        <div class="cedula-slot-placeholder" id="ph-frontal">
+          <div class="icon">📷</div><p>Toca para subir</p>
+        </div>
+        <input type="file" accept="image/*" capture="environment" id="inp-frontal" class="hidden" onchange="loadPhoto(this,'frontal')"/>
+      </div>
+      <div class="cedula-slot" onclick="triggerPhoto('trasera')">
+        <img id="img-trasera" class="hidden"/>
+        <div class="cedula-slot-placeholder" id="ph-trasera">
+          <div class="icon">📷</div><p>Toca para subir</p>
+        </div>
+        <input type="file" accept="image/*" capture="environment" id="inp-trasera" class="hidden" onchange="loadPhoto(this,'trasera')"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-actions">
+    <button class="btn-edit-full" onclick="editCurrent()">✏️ Editar Empleado</button>
+    <button class="btn-del-full" onclick="deleteCurrent()">🗑️ Eliminar Empleado</button>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────
+const DEPTS = {
+  todos:          {name:'Todos los Empleados',      desc:'Vista general de todo el personal',          color:'#c9a84c', icon:'👥', extra:false},
+  administrativo: {name:'Administrativo',            desc:'Dirección, finanzas y gestión',              color:'#c9a84c', icon:'🏢', extra:false},
+  cocina:         {name:'Cocina',                    desc:'Chef, cocineros y auxiliares — planta fija', color:'#c97a4c', icon:'🍳', extra:false},
+  cocina_extra:   {name:'Cocina · Extras por Día',   desc:'Personal eventual sin contrato fijo',        color:'#c97a4c', icon:'🍳⚡', extra:true, parent:'cocina'},
+  servicio:       {name:'Servicio y Ventas',         desc:'Meseros, bartenders y atención — planta fija',color:'#4caa6e', icon:'🛎️', extra:false},
+  servicio_extra: {name:'Servicio · Extras por Día', desc:'Personal eventual sin contrato fijo',        color:'#4caa6e', icon:'🛎️⚡', extra:true, parent:'servicio'},
+  aseo:           {name:'Aseo y Mantenimiento',      desc:'Limpieza y servicios — planta fija',         color:'#4c8ec9', icon:'🧹', extra:false},
+  aseo_extra:     {name:'Aseo · Extras por Día',     desc:'Personal eventual sin contrato fijo',        color:'#4c8ec9', icon:'🧹⚡', extra:true, parent:'aseo'},
+};
+const SL = {activo:'Activo',vacaciones:'Vacaciones',incapacidad:'Incapacidad',inactivo:'Inactivo'};
+
+// ── State ───────────────────────────────────────────────
+let employees = JSON.parse(localStorage.getItem('lm_personal2') || '[]');
+let activeDept = 'todos';
+let currentEmpId = null;
+
+if(!employees.length){
+  employees=[
+    {id:'1',nombre:'María González Ramos',cedula:'1040123456',cargo:'Gerente General',depto:'administrativo',estado:'activo',tel:'3001234567',nac:'1985-05-15',ingreso:'2020-01-15',salario:'4500000',camisa:'M',pantalon:'28',zapatos:'36',notas:''},
+    {id:'2',nombre:'Carlos Martínez',cedula:'1040234567',cargo:'Contador',depto:'administrativo',estado:'activo',tel:'3102345678',nac:'1990-08-20',ingreso:'2021-03-01',salario:'2800000',camisa:'L',pantalon:'32',zapatos:'42',notas:''},
+    {id:'3',nombre:'Luisa Pérez Ortiz',cedula:'1040345678',cargo:'Chef Principal',depto:'cocina',estado:'activo',tel:'3153456789',nac:'1988-11-03',ingreso:'2019-06-10',salario:'3200000',camisa:'S',pantalon:'26',zapatos:'35',notas:'Especialista en cocina costeña'},
+    {id:'4',nombre:'Andrés Ramos',cedula:'1040456789',cargo:'Sous Chef',depto:'cocina',estado:'activo',tel:'3204567890',nac:'1995-02-14',ingreso:'2021-08-20',salario:'2200000',camisa:'M',pantalon:'30',zapatos:'40',notas:''},
+    {id:'5',nombre:'Valentina Torres',cedula:'1040567890',cargo:'Mesera',depto:'servicio',estado:'activo',tel:'3005678901',nac:'1998-07-22',ingreso:'2022-01-10',salario:'1600000',camisa:'XS',pantalon:'24',zapatos:'34',notas:''},
+    {id:'6',nombre:'Juan Herrera Polo',cedula:'1040678901',cargo:'Bartender',depto:'servicio',estado:'vacaciones',tel:'3106789012',nac:'1993-03-30',ingreso:'2021-11-05',salario:'1800000',camisa:'L',pantalon:'32',zapatos:'43',notas:'Regresa 15 de junio'},
+    {id:'7',nombre:'Patricia Díaz',cedula:'1040789012',cargo:'Auxiliar de Limpieza',depto:'aseo',estado:'activo',tel:'3207890123',nac:'1980-09-11',ingreso:'2023-02-01',salario:'1300000',camisa:'M',pantalon:'30',zapatos:'37',notas:''},
+  ];
+  save();
+}
+
+// ── Utils ───────────────────────────────────────────────
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+let activeFilter='todos'; // 'todos' | 'fijos' | 'extras'
+function setFilter(f, doRender=true){
+  activeFilter=f;
+  document.querySelectorAll('.ftab').forEach(b=>{
+    b.classList.toggle('active', b.dataset.f===f);
+  });
+  if(doRender) renderList();
+}
+function save(){localStorage.setItem('lm_personal2',JSON.stringify(employees));}
+function fmt$(n){return n?'$'+parseInt(n).toLocaleString('es-CO'):'-';}
+function fmtDate(d){if(!d)return'—';const dt=new Date(d+'T12:00');return dt.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function initials(n){return n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ── Navigation ──────────────────────────────────────────
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── Screen 1: Departments ───────────────────────────────
+function renderDepts(){
+  const total=employees.length;
+  document.getElementById('total-count').textContent=total;
+  const activos=employees.length;
+
+  const mainDepts=[
+    {key:'todos',         icon:'👥', name:'Todos los Empleados', color:'#c9a84c', desc:'Todo el personal'},
+    {key:'administrativo',icon:'🏢', name:'Administrativo',      color:'#c9a84c', desc:'Dirección y gestión'},
+    {key:'cocina',        icon:'🍳', name:'Cocina',              color:'#c97a4c', desc:'Chef y cocineros'},
+    {key:'servicio',      icon:'🛎️', name:'Servicio y Ventas',   color:'#4caa6e', desc:'Meseros y bartenders'},
+    {key:'aseo',          icon:'🧹', name:'Aseo y Mantenimiento',color:'#4c8ec9', desc:'Limpieza y servicios'},
+  ];
+
+  let out='';
+  mainDepts.forEach(({key,icon,name,color,desc})=>{
+    let pool;
+    if(key==='todos') pool=employees;
+    else pool=employees.filter(e=>e.depto===key||e.depto===key+'_extra');
+
+    const cFijo =key==='todos'?employees.filter(e=>!e.depto.includes('_extra')).length
+                              :employees.filter(e=>e.depto===key).length;
+    const cExtra=key==='todos'?employees.filter(e=>e.depto.includes('_extra')).length
+                              :employees.filter(e=>e.depto===key+'_extra').length;
+    const total=pool.length;
+
+    const isTodos=key==='todos';
+    const hasExtras=key!=='todos'&&key!=='administrativo';
+
+    out+=`<div class="dept-card${isTodos?' todos':''}" style="--dc:${color};grid-column:${isTodos?'1/-1':'auto'}" onclick="openDept('${key}')">
+      <div style="display:flex;align-items:flex-start;gap:11px;">
+        <span style="font-size:${isTodos?'28px':'32px'};flex-shrink:0;line-height:1">${icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div class="dept-card-name">${name}</div>
+          <div style="font-size:11px;color:#9a9080;margin-top:2px;">${desc}</div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <span style="background:rgba(255,255,255,.06);border-radius:6px;padding:3px 9px;font-size:11px;color:#e8e0d0;">
+              <b style="font-family:'Playfair Display',serif;font-size:14px;color:${color}">${cFijo}</b>
+              <span style="color:#9a9080"> fijo${cFijo!==1?'s':''}</span>
+            </span>
+            ${hasExtras?`<span style="background:rgba(255,200,0,.08);border:1px dashed rgba(232,201,106,.25);border-radius:6px;padding:3px 9px;font-size:11px;color:#e8e0d0;">
+              <b style="font-family:'Playfair Display',serif;font-size:14px;color:#e8c96a">${cExtra}</b>
+              <span style="color:#9a9080"> extra${cExtra!==1?'s':''}</span>
+            </span>`:''}
+          </div>
+        </div>
+        <span style="color:#9a9080;font-size:18px;opacity:.4;align-self:center">›</span>
+      </div>
+      <div class="dept-card-bar" style="margin-top:10px">
+        <div class="dept-card-bar-fill" style="width:${total>0?Math.min(100,total*12+20):'0'}%"></div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('dept-grid').innerHTML=out;
+}
+
+function openDept(dept){
+  activeDept=dept;
+  // Normalize — strip _extra so we show whole dept
+  const baseKey=dept.replace('_extra','');
+  const d=DEPTS[baseKey]||DEPTS[dept]||DEPTS['todos'];
+  document.getElementById('list-title').textContent=d.name;
+  document.getElementById('list-sub').textContent=d.desc;
+  document.getElementById('list-icon').textContent=d.icon;
+  document.getElementById('list-dept-name').textContent=d.name;
+  document.getElementById('list-dept-desc').textContent=d.desc;
+  document.getElementById('search').value='';
+  if(baseKey!=='todos') document.getElementById('f-depto').value=baseKey;
+  // Show/hide filter tabs
+  const noExtras=baseKey==='administrativo';
+  document.getElementById('filter-tabs').style.display=noExtras?'none':'flex'; document.getElementById('filter-tabs').style.background='#0f0e0c';
+  setFilter('todos', false); // reset filter without re-render
+  renderList();
+  goTo('s-list');
+}
+
+// ── Screen 2: List ──────────────────────────────────────
+function empRowHTML(e){
+  const isExtra=e.depto.includes('_extra');
+  const col=DEPTS[e.depto.replace('_extra','')]?.color||'#c9a84c';
+  return`<div class="emp-row" onclick="openDetail('${e.id}')">
+    <div class="emp-av" style="background:${col}">${initials(e.nombre)}</div>
+    <div class="emp-row-info">
+      <div class="emp-row-name">${e.nombre}</div>
+      <div class="emp-row-sub">${e.cargo} · ${e.cedula||'—'}</div>
+    </div>
+    ${isExtra
+      ?`<span style="background:rgba(232,201,106,.12);border:1px dashed rgba(232,201,106,.3);
+             border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:#e8c96a;white-space:nowrap;">⚡ Por día</span>`
+      :`<span style="background:rgba(76,170,110,.12);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;color:#4caa6e;white-space:nowrap;">● Activo</span>`
+    }
+    <span class="emp-row-arrow">›</span>
+  </div>`;
+}
+
+function renderList(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const baseKey=activeDept.replace('_extra','');
+
+  let pool;
+  if(baseKey==='todos') pool=[...employees];
+  else pool=employees.filter(e=>e.depto===baseKey||e.depto===baseKey+'_extra');
+
+  if(q) pool=pool.filter(e=>
+    e.nombre.toLowerCase().includes(q)||
+    e.cargo.toLowerCase().includes(q)||
+    (e.cedula||'').includes(q)
+  );
+  // Apply fijo/extra filter
+  if(activeFilter==='fijos')  pool=pool.filter(e=>!e.depto.includes('_extra'));
+  if(activeFilter==='extras') pool=pool.filter(e=> e.depto.includes('_extra'));
+
+  if(!pool.length){
+    document.getElementById('emp-list').innerHTML=`
+      <div style="text-align:center;padding:40px;color:#9a9080;font-size:13px;">
+        <div style="font-size:36px;margin-bottom:10px;opacity:.4">👤</div>
+        Sin empleados en este departamento
+      </div>`;
+    return;
+  }
+
+  const fijos =pool.filter(e=>!e.depto.includes('_extra'));
+  const extras=pool.filter(e=> e.depto.includes('_extra'));
+  let out='';
+
+  if(activeFilter==='fijos'){
+    out+=`<div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:1.5px;padding:0 2px 10px;">📋 Personal Fijo · ${fijos.length}</div>`;
+    out+=fijos.map(empRowHTML).join('');
+  } else if(activeFilter==='extras'){
+    out+=`<div style="font-size:10px;color:#e8c96a;text-transform:uppercase;letter-spacing:1.5px;padding:0 2px 10px;display:flex;align-items:center;gap:5px;"><span>⚡</span> Extras por Día · ${extras.length}</div>`;
+    out+=extras.map(empRowHTML).join('');
+  } else {
+    // Todos: show fijos first, then extras with separator
+    if(fijos.length){
+      out+=`<div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:1.5px;padding:0 2px 10px;">📋 Personal Fijo · ${fijos.length}</div>`;
+      out+=fijos.map(empRowHTML).join('');
+    }
+    if(extras.length){
+      out+=`<div style="font-size:10px;color:#e8c96a;text-transform:uppercase;letter-spacing:1.5px;padding:0 2px 10px;margin-top:14px;display:flex;align-items:center;gap:5px;"><span>⚡</span> Extras por Día · ${extras.length}</div>`;
+      out+=extras.map(empRowHTML).join('');
+    }
+  }
+
+  document.getElementById('emp-list').innerHTML=out;
+}
+
+// ── Screen 3: Detail ────────────────────────────────────
+function openDetail(id){
+  const e=employees.find(x=>x.id===id);
+  if(!e)return;
+  currentEmpId=id;
+  const col=DEPTS[e.depto]?.color||'#c9a84c';
+  document.getElementById('d-av').textContent=initials(e.nombre);
+  document.getElementById('d-av').style.background=col;
+  document.getElementById('d-name').textContent=e.nombre;
+  const isExtra=e.depto.includes('_extra');
+  document.getElementById('d-cargo').innerHTML=`${DEPTS[e.depto]?.icon||''} ${DEPTS[e.depto]?.name||''} · ${e.cargo}${isExtra?' <span style="background:rgba(255,200,0,.15);color:#e8c96a;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;margin-left:4px;">⚡ EXTRA / DÍA</span>':''}`;
+  document.getElementById('d-cedula').textContent=e.cedula||'—';
+  document.getElementById('d-tel').textContent=e.tel||'—';
+  document.getElementById('d-nac').textContent=fmtDate(e.nac);
+  document.getElementById('d-ingreso').textContent=fmtDate(e.ingreso);
+  document.getElementById('d-salario').textContent=fmt$(e.salario);
+
+  document.getElementById('d-camisa').textContent=e.camisa||'—';
+  document.getElementById('d-pantalon').textContent=e.pantalon||'—';
+  document.getElementById('d-zapatos').textContent=e.zapatos||'—';
+  // Notas
+  if(e.notas){
+    document.getElementById('d-notas').textContent=e.notas;
+    document.getElementById('d-notas-wrap').classList.remove('hidden');
+  } else {
+    document.getElementById('d-notas-wrap').classList.add('hidden');
+  }
+  // Cédula photos
+  ['frontal','trasera'].forEach(side=>{
+    const img=document.getElementById('img-'+side);
+    const ph=document.getElementById('ph-'+side);
+    const stored=e['cedula_'+side];
+    if(stored){img.src=stored;img.classList.remove('hidden');ph.classList.add('hidden');}
+    else{img.classList.add('hidden');img.src='';ph.classList.remove('hidden');}
+  });
+  goTo('s-detail');
+}
+
+function triggerPhoto(side){document.getElementById('inp-'+side).click();}
+function loadPhoto(inp,side){
+  const file=inp.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const e=employees.find(x=>x.id===currentEmpId); if(!e)return;
+    e['cedula_'+side]=ev.target.result;
+    save();
+    document.getElementById('img-'+side).src=ev.target.result;
+    document.getElementById('img-'+side).classList.remove('hidden');
+    document.getElementById('ph-'+side).classList.add('hidden');
+    showToast('✓ Foto guardada');
+  };
+  reader.readAsDataURL(file);
+}
+
+function editCurrent(){
+  const e=employees.find(x=>x.id===currentEmpId);
+  if(e)openModal(e);
+}
+function deleteCurrent(){
+  if(!confirm('¿Eliminar este empleado?'))return;
+  employees=employees.filter(x=>x.id!==currentEmpId);
+  save();renderDepts();renderList();goTo('s-list');
+  showToast('Empleado eliminado');
+}
+
+// ── Modal ───────────────────────────────────────────────
+function openModal(e=null){
+  document.getElementById('m-title').textContent=e?'Editar Empleado':'Agregar Empleado';
+  document.getElementById('m-sub').textContent=e?e.nombre:'Nueva ficha de empleado';
+  document.getElementById('f-id').value=e?.id||'';
+  ['nombre','cedula','cargo','tel','salario','pantalon','zapatos','notas'].forEach(k=>{
+    document.getElementById('f-'+k).value=e?.[k]||'';
+  });
+  const baseDepto=(e?.depto||'').replace('_extra','');
+  document.getElementById('f-depto').value=baseDepto||(activeDept.replace('_extra','')!=='todos'?activeDept.replace('_extra',''):'administrativo');
+
+  document.getElementById('f-vinculo').value=(e?.depto||'').includes('_extra')?'extra':'fijo';
+  // Disable extras for administrativo
+  document.getElementById('f-depto').onchange=function(){
+    const v=document.getElementById('f-vinculo');
+    if(this.value==='administrativo'){v.value='fijo';v.disabled=true;}
+    else{v.disabled=false;}
+  };
+  document.getElementById('f-depto').dispatchEvent(new Event('change'));
+  document.getElementById('f-nac').value=e?.nac||'';
+  document.getElementById('f-ingreso').value=e?.ingreso||'';
+  document.getElementById('f-camisa').value=e?.camisa||'';
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('modal').classList.add('hidden');}
+
+function saveEmp(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  const cargo=document.getElementById('f-cargo').value.trim();
+  if(!nombre||!cargo){showToast('⚠️ Nombre y cargo son obligatorios');return;}
+  const id=document.getElementById('f-id').value;
+  const existing=id?employees.find(e=>e.id===id):null;
+  const vinculo=document.getElementById('f-vinculo').value;
+  const deptoBase=document.getElementById('f-depto').value.replace('_extra','');
+  const deptoFinal=vinculo==='extra'&&deptoBase!=='administrativo'?deptoBase+'_extra':deptoBase;
+  const emp={
+    id:id||uid(), nombre, cargo,
+    cedula:document.getElementById('f-cedula').value.trim(),
+    depto:deptoFinal,
+    estado:'activo',
+    tel:document.getElementById('f-tel').value.trim(),
+    nac:document.getElementById('f-nac').value,
+    ingreso:document.getElementById('f-ingreso').value,
+    salario:document.getElementById('f-salario').value,
+    camisa:document.getElementById('f-camisa').value,
+    pantalon:document.getElementById('f-pantalon').value.trim(),
+    zapatos:document.getElementById('f-zapatos').value.trim(),
+    notas:document.getElementById('f-notas').value.trim(),
+    cedula_frontal:existing?.cedula_frontal||null,
+    cedula_trasera:existing?.cedula_trasera||null,
+  };
+  if(id){const i=employees.findIndex(e=>e.id===id);if(i>=0)employees[i]=emp;}
+  else employees.push(emp);
+  save();closeModal();renderDepts();renderList();
+  if(id&&currentEmpId===id)openDetail(id);
+  showToast(id?'✓ Empleado actualizado':'✓ Empleado agregado');
+}
+
+// ── Import Excel ────────────────────────────────────────
+function importExcel(inp){
+  const file=inp.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      let added=0, updated=0;
+      rows.forEach(row=>{
+        const nombre=String(row['Nombre']||row['nombre']||row['NOMBRE']||'').trim();
+        if(!nombre)return;
+        const cedula=String(row['Cedula']||row['Cédula']||row['cedula']||row['CC']||'').trim();
+        const existing=cedula?employees.find(e=>e.cedula===cedula):null;
+        const mapDepto=(d,tipo)=>{
+          if(!d)return'administrativo';
+          const dstr=String(d).toLowerCase();
+          const isExtra=String(tipo||'').toLowerCase().includes('extra')||String(tipo||'').toLowerCase().includes('día')||String(tipo||'').toLowerCase().includes('dia');
+          let base='administrativo';
+          if(dstr.includes('coc'))base='cocina';
+          else if(dstr.includes('serv')||dstr.includes('vent'))base='servicio';
+          else if(dstr.includes('aseo')||dstr.includes('mant'))base='aseo';
+          return(isExtra&&base!=='administrativo')?base+'_extra':base;
+        };
+        const emp={
+          id:existing?.id||uid(), nombre,cedula,
+          cargo:String(row['Cargo']||row['cargo']||'').trim(),
+          depto:mapDepto(row['Departamento']||row['departamento']||row['Depto']||'', row['Vinculacion']||row['Vinculación']||row['Tipo']||''),
+          estado:String(row['Estado']||row['estado']||'activo').trim().toLowerCase()||'activo',
+          tel:String(row['Telefono']||row['Teléfono']||row['tel']||'').trim(),
+          nac:String(row['Nacimiento']||row['nacimiento']||'').trim(),
+          ingreso:String(row['Ingreso']||row['ingreso']||'').trim(),
+          salario:String(row['Salario']||row['salario']||'').trim(),
+          camisa:String(row['Camisa']||row['camisa']||'').trim(),
+          pantalon:String(row['Pantalon']||row['Pantalón']||'').trim(),
+          zapatos:String(row['Zapatos']||row['zapatos']||'').trim(),
+          notas:String(row['Notas']||row['notas']||'').trim(),
+          cedula_frontal:existing?.cedula_frontal||null,
+          cedula_trasera:existing?.cedula_trasera||null,
+        };
+        if(existing){employees[employees.indexOf(existing)]=emp;updated++;}
+        else{employees.push(emp);added++;}
+      });
+      save();renderDepts();
+      showToast(`✓ ${added} agregados · ${updated} actualizados`);
+    }catch(err){showToast('Error al leer el archivo: '+err.message);}
+    inp.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── Export ──────────────────────────────────────────────
+let exportOpt='todos';
+function openExportModal(){
+  selectExportOpt('todos');
+  document.getElementById('export-modal').classList.remove('hidden');
+}
+function closeExportModal(){ document.getElementById('export-modal').classList.add('hidden'); }
+function selectExportOpt(opt){
+  exportOpt=opt;
+  document.querySelectorAll('.exp-opt').forEach(b=>b.classList.remove('active'));
+  document.getElementById('exp-opt-'+opt).classList.add('active');
+}
+
+function generateReport(){
+  const DEPT_ORDER=['administrativo','cocina','servicio','aseo'];
+  const DEPT_INFO={
+    administrativo:{name:'Administrativo', icon:'🏢', color:'#C9A84C'},
+    cocina:        {name:'Cocina',         icon:'🍳', color:'#C97A4C'},
+    servicio:      {name:'Servicio y Ventas',icon:'🛎️',color:'#4CAA6E'},
+    aseo:          {name:'Aseo y Mantenimiento',icon:'🧹',color:'#4C8EC9'},
+  };
+
+  const fmtDate=d=>{if(!d)return'—';const dt=new Date(d+'T12:00');return dt.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'});};
+  const fmt$=n=>n?'$'+parseInt(n).toLocaleString('es-CO'):'—';
+  const initials=n=>n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+
+  // Build dept sections
+  const deptsToShow = exportOpt==='todos' ? DEPT_ORDER : [exportOpt];
+
+  let sectionsHTML='';
+  deptsToShow.forEach(key=>{
+    const info=DEPT_INFO[key];
+    const fijos= employees.filter(e=>e.depto===key);
+    const extras=employees.filter(e=>e.depto===key+'_extra');
+    const all=[...fijos,...extras];
+    if(all.length===0) return;
+
+    let rows='';
+    if(fijos.length>0){
+      rows+=`<tr><td colspan="7" style="background:#1a1a18;padding:6px 10px;font-size:10px;color:#9a9080;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #2e2b25;">📋 PERSONAL FIJO — ${fijos.length} empleado${fijos.length!==1?'s':''}</td></tr>`;
+      fijos.forEach((e,i)=>{
+        rows+=`<tr style="background:${i%2===0?'#1e1c1a':'#181614'}">
+          <td style="padding:8px 10px;font-weight:700;color:#f5edd8;">${e.nombre}</td>
+          <td style="padding:8px 10px;color:#a09585;">${e.cedula||'—'}</td>
+          <td style="padding:8px 10px;color:#d0c8b8;">${e.cargo}</td>
+          <td style="padding:8px 10px;color:#a09585;">${e.tel||'—'}</td>
+          <td style="padding:8px 10px;color:#a09585;">${fmtDate(e.ingreso)}</td>
+          <td style="padding:8px 10px;color:#4caa6e;font-weight:600;">${fmt$(e.salario)}</td>
+          <td style="padding:8px 10px;color:#a09585;font-size:11px;">${[e.camisa,e.pantalon,e.zapatos].filter(Boolean).join(' / ')||'—'}</td>
+        </tr>`;
+      });
+    }
+    if(extras.length>0){
+      rows+=`<tr><td colspan="7" style="background:#1a1a14;padding:6px 10px;font-size:10px;color:#e8c96a;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #2e2b25;">⚡ EXTRAS POR DÍA — ${extras.length} empleado${extras.length!==1?'s':''}</td></tr>`;
+      extras.forEach((e,i)=>{
+        rows+=`<tr style="background:${i%2===0?'#1e1c16':'#181612'}">
+          <td style="padding:8px 10px;font-weight:700;color:#f5edd8;">${e.nombre}</td>
+          <td style="padding:8px 10px;color:#a09585;">${e.cedula||'—'}</td>
+          <td style="padding:8px 10px;color:#d0c8b8;">${e.cargo}</td>
+          <td style="padding:8px 10px;color:#a09585;">${e.tel||'—'}</td>
+          <td style="padding:8px 10px;color:#a09585;">${fmtDate(e.ingreso)}</td>
+          <td style="padding:8px 10px;color:#4caa6e;font-weight:600;">${fmt$(e.salario)}</td>
+          <td style="padding:8px 10px;color:#a09585;font-size:11px;">${[e.camisa,e.pantalon,e.zapatos].filter(Boolean).join(' / ')||'—'}</td>
+        </tr>`;
+      });
+    }
+
+    sectionsHTML+=`
+    <div class="dept-section">
+      <div class="dept-title" style="border-left:4px solid ${info.color};">
+        <span class="dept-icon">${info.icon}</span>
+        <div>
+          <span class="dept-name">${info.name}</span>
+          <span class="dept-sub">${all.length} empleado${all.length!==1?'s':''} · ${fijos.length} fijo${fijos.length!==1?'s':''} · ${extras.length} extra${extras.length!==1?'s':''}</span>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre Completo</th><th>Cédula</th><th>Cargo</th>
+            <th>Teléfono</th><th>F. Ingreso</th><th>Salario</th><th>Tallas</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  });
+
+  const totalEmps=deptsToShow.reduce((s,k)=>s+employees.filter(e=>e.depto===k||e.depto===k+'_extra').length,0);
+  const reportTitle=exportOpt==='todos'?'Informe General de Personal':('Informe de Personal — '+(DEPT_INFO[exportOpt]?.name||''));
+  const now=new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'});
+
+  const reportHTML=`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>${reportTitle} · La Matriarca</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0f0e0c;color:#e8e0d0;font-family:Arial,sans-serif;font-size:12px;padding:24px;}
+  .report-header{text-align:center;padding:20px 0 16px;border-bottom:2px solid #c9a84c;margin-bottom:20px;}
+  .report-header h1{font-size:22px;color:#c9a84c;margin-bottom:4px;letter-spacing:1px;}
+  .report-header h2{font-size:15px;color:#f5edd8;margin-bottom:6px;}
+  .report-header p{font-size:11px;color:#9a9080;}
+  .report-meta{display:flex;justify-content:space-between;background:#1a1814;border-radius:8px;
+    padding:10px 16px;margin-bottom:20px;font-size:11px;color:#9a9080;flex-wrap:wrap;gap:8px;}
+  .report-meta b{color:#e8e0d0;}
+  .dept-section{margin-bottom:28px;}
+  .dept-title{display:flex;align-items:center;gap:10px;padding:10px 14px;
+    background:#1a1814;border-radius:8px 8px 0 0;margin-bottom:0;}
+  .dept-icon{font-size:20px;}
+  .dept-name{font-size:14px;font-weight:700;color:#f5edd8;display:block;}
+  .dept-sub{font-size:11px;color:#9a9080;}
+  table{width:100%;border-collapse:collapse;border-radius:0 0 8px 8px;overflow:hidden;}
+  th{background:#161412;color:#9a9080;padding:8px 10px;font-size:10px;text-transform:uppercase;
+    letter-spacing:1px;text-align:left;border-bottom:1px solid #2e2b25;}
+  td{border-bottom:1px solid #1a1814;}
+  .report-footer{text-align:center;margin-top:28px;padding-top:14px;
+    border-top:1px solid #2e2b25;font-size:10px;color:#9a9080;}
+  @media print{
+    body{background:#fff;color:#000;padding:16px;}
+    .report-header h1{color:#8B6914;}
+    .report-header h2{color:#000;}
+    .report-header p,.report-meta,.dept-sub{color:#555;}
+    .dept-title{background:#f5f0e8;border-left-color:inherit;}
+    .dept-name{color:#000;}
+    th{background:#e8e0d0;color:#333;}
+    td,tr{color:#000!important;background:#fff!important;}
+    table{border:1px solid #ccc;}
+    th,td{border:1px solid #ddd!important;}
+    .report-meta{background:#f5f5f5;border:1px solid #ddd;}
+    .report-footer{color:#777;border-top:1px solid #ccc;}
+  }
+</style>
+</head>
+<body>
+<div class="report-header">
+  <h1>🌿 LA MATRIARCA · BARRANQUILLA</h1>
+  <h2>${reportTitle}</h2>
+  <p>Generado el ${now}</p>
+</div>
+<div class="report-meta">
+  <span>📅 Fecha: <b>${now}</b></span>
+  <span>👥 Total empleados: <b>${totalEmps}</b></span>
+  <span>🏢 Cobertura: <b>${exportOpt==='todos'?'Todos los departamentos':DEPT_INFO[exportOpt]?.name}</b></span>
+</div>
+${sectionsHTML}
+<div class="report-footer">
+  La Matriarca Barranquilla · Informe generado automáticamente desde el Sistema de Gestión de Personal
+</div>
+\u003cscript\u003esetTimeout(()=>window.print(),300);\u003c\/script\u003e
+<script>
+const _store={};
+const SafeStorage={
+  getItem(k){try{return localStorage.getItem(k);}catch(e){return _store[k]||null;}},
+  setItem(k,v){try{localStorage.setItem(k,v);}catch(e){_store[k]=v;}}
+};
+function showToast(m){const t=document.getElementById('toast');if(t){t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}}
+function goHome(){window.location.href='index.html';}
+function LM_goHome(){goHome();}
+
+// ── Config ──────────────────────────────────────────────
+const DEPTS = {
+  todos:          {name:'Todos los Empleados',      desc:'Vista general de todo el personal',          color:'#c9a84c', icon:'👥', extra:false},
+  administrativo: {name:'Administrativo',            desc:'Dirección, finanzas y gestión',              color:'#c9a84c', icon:'🏢', extra:false},
+  cocina:         {name:'Cocina',                    desc:'Chef, cocineros y auxiliares — planta fija', color:'#c97a4c', icon:'🍳', extra:false},
+  cocina_extra:   {name:'Cocina · Extras por Día',   desc:'Personal eventual sin contrato fijo',        color:'#c97a4c', icon:'🍳⚡', extra:true, parent:'cocina'},
+  servicio:       {name:'Servicio y Ventas',         desc:'Meseros, bartenders y atención — planta fija',color:'#4caa6e', icon:'🛎️', extra:false},
+  servicio_extra: {name:'Servicio · Extras por Día', desc:'Personal eventual sin contrato fijo',        color:'#4caa6e', icon:'🛎️⚡', extra:true, parent:'servicio'},
+  aseo:           {name:'Aseo y Mantenimiento',      desc:'Limpieza y servicios — planta fija',         color:'#4c8ec9', icon:'🧹', extra:false},
+  aseo_extra:     {name:'Aseo · Extras por Día',     desc:'Personal eventual sin contrato fijo',        color:'#4c8ec9', icon:'🧹⚡', extra:true, parent:'aseo'},
+};
+const SL = {activo:'Activo',vacaciones:'Vacaciones',incapacidad:'Incapacidad',inactivo:'Inactivo'};
+
+// ── State ───────────────────────────────────────────────
+let employees = JSON.parse(localStorage.getItem('lm_personal2') || '[]');
+let activeDept = 'todos';
+let currentEmpId = null;
+
+if(!employees.length){
+  employees=[
+    {id:'1',nombre:'María González Ramos',cedula:'1040123456',cargo:'Gerente General',depto:'administrativo',estado:'activo',tel:'3001234567',nac:'1985-05-15',ingreso:'2020-01-15',salario:'4500000',camisa:'M',pantalon:'28',zapatos:'36',notas:''},
+    {id:'2',nombre:'Carlos Martínez',cedula:'1040234567',cargo:'Contador',depto:'administrativo',estado:'activo',tel:'3102345678',nac:'1990-08-20',ingreso:'2021-03-01',salario:'2800000',camisa:'L',pantalon:'32',zapatos:'42',notas:''},
+    {id:'3',nombre:'Luisa Pérez Ortiz',cedula:'1040345678',cargo:'Chef Principal',depto:'cocina',estado:'activo',tel:'3153456789',nac:'1988-11-03',ingreso:'2019-06-10',salario:'3200000',camisa:'S',pantalon:'26',zapatos:'35',notas:'Especialista en cocina costeña'},
+    {id:'4',nombre:'Andrés Ramos',cedula:'1040456789',cargo:'Sous Chef',depto:'cocina',estado:'activo',tel:'3204567890',nac:'1995-02-14',ingreso:'2021-08-20',salario:'2200000',camisa:'M',pantalon:'30',zapatos:'40',notas:''},
+    {id:'5',nombre:'Valentina Torres',cedula:'1040567890',cargo:'Mesera',depto:'servicio',estado:'activo',tel:'3005678901',nac:'1998-07-22',ingreso:'2022-01-10',salario:'1600000',camisa:'XS',pantalon:'24',zapatos:'34',notas:''},
+    {id:'6',nombre:'Juan Herrera Polo',cedula:'1040678901',cargo:'Bartender',depto:'servicio',estado:'vacaciones',tel:'3106789012',nac:'1993-03-30',ingreso:'2021-11-05',salario:'1800000',camisa:'L',pantalon:'32',zapatos:'43',notas:'Regresa 15 de junio'},
+    {id:'7',nombre:'Patricia Díaz',cedula:'1040789012',cargo:'Auxiliar de Limpieza',depto:'aseo',estado:'activo',tel:'3207890123',nac:'1980-09-11',ingreso:'2023-02-01',salario:'1300000',camisa:'M',pantalon:'30',zapatos:'37',notas:''},
+  ];
+  save();
+}
+
+// ── Utils ───────────────────────────────────────────────
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+let activeFilter='todos'; // 'todos' | 'fijos' | 'extras'
+function setFilter(f, doRender=true){
+  activeFilter=f;
+  document.querySelectorAll('.ftab').forEach(b=>{
+    b.classList.toggle('active', b.dataset.f===f);
+  });
+  if(doRender) renderList();
+}
+function save(){localStorage.setItem('lm_personal2',JSON.stringify(employees));}
+function P_fmt$(n){return n?'$'+parseInt(n).toLocaleString('es-CO'):'-';}
+function fmtDate(d){if(!d)return'—';const dt=new Date(d+'T12:00');return dt.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function initials(n){return n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ── Navigation ──────────────────────────────────────────
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── Screen 1: Departments ───────────────────────────────
+function renderDepts(){
+  const total=employees.length;
+  document.getElementById('total-count').textContent=total;
+  const activos=employees.length;
+
+  const mainDepts=[
+    {key:'todos',         icon:'👥', name:'Todos los Empleados', color:'#c9a84c', desc:'Todo el personal'},
+    {key:'administrativo',icon:'🏢', name:'Administrativo',      color:'#c9a84c', desc:'Dirección y gestión'},
+    {key:'cocina',        icon:'🍳', name:'Cocina',              color:'#c97a4c', desc:'Chef y cocineros'},
+    {key:'servicio',      icon:'🛎️', name:'Servicio y Ventas',   color:'#4caa6e', desc:'Meseros y bartenders'},
+    {key:'aseo',          icon:'🧹', name:'Aseo y Mantenimiento',color:'#4c8ec9', desc:'Limpieza y servicios'},
+  ];
+
+  let out='';
+  mainDepts.forEach(({key,icon,name,color,desc})=>{
+    let pool;
+    if(key==='todos') pool=employees;
+    else pool=employees.filter(e=>e.depto===key||e.depto===key+'_extra');
+
+    const cFijo =key==='todos'?employees.filter(e=>!e.depto.includes('_extra')).length
+                              :employees.filter(e=>e.depto===key).length;
+    const cExtra=key==='todos'?employees.filter(e=>e.depto.includes('_extra')).length
+                              :employees.filter(e=>e.depto===key+'_extra').length;
+    const total=pool.length;
+
+    const isTodos=key==='todos';
+    const hasExtras=key!=='todos'&&key!=='administrativo';
+
+    out+=`<div class="dept-card${isTodos?' todos':''}" style="--dc:${color};grid-column:${isTodos?'1/-1':'auto'}" onclick="openDept('${key}')">
+      <div style="display:flex;align-items:flex-start;gap:11px;">
+        <span style="font-size:${isTodos?'28px':'32px'};flex-shrink:0;line-height:1">${icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div class="dept-card-name">${name}</div>
+          <div style="font-size:11px;color:#9a9080;margin-top:2px;">${desc}</div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+            <span style="background:rgba(255,255,255,.06);border-radius:6px;padding:3px 9px;font-size:11px;color:#e8e0d0;">
+              <b style="font-family:'Playfair Display',serif;font-size:14px;color:${color}">${cFijo}</b>
+              <span style="color:#9a9080"> fijo${cFijo!==1?'s':''}</span>
+            </span>
+            ${hasExtras?`<span style="background:rgba(255,200,0,.08);border:1px dashed rgba(232,201,106,.25);border-radius:6px;padding:3px 9px;font-size:11px;color:#e8e0d0;">
+              <b style="font-family:'Playfair Display',serif;font-size:14px;color:#e8c96a">${cExtra}</b>
+              <span style="color:#9a9080"> extra${cExtra!==1?'s':''}</span>
+            </span>`:''}
+          </div>
+        </div>
+        <span style="color:#9a9080;font-size:18px;opacity:.4;align-self:center">›</span>
+      </div>
+      <div class="dept-card-bar" style="margin-top:10px">
+        <div class="dept-card-bar-fill" style="width:${total>0?Math.min(100,total*12+20):'0'}%"></div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('dept-grid').innerHTML=out;
+}
+
+function openDept(dept){
+  activeDept=dept;
+  // Normalize — strip _extra so we show whole dept
+  const baseKey=dept.replace('_extra','');
+  const d=DEPTS[baseKey]||DEPTS[dept]||DEPTS['todos'];
+  document.getElementById('list-title').textContent=d.name;
+  document.getElementById('list-sub').textContent=d.desc;
+  document.getElementById('list-icon').textContent=d.icon;
+  document.getElementById('list-dept-name').textContent=d.name;
+  document.getElementById('list-dept-desc').textContent=d.desc;
+  document.getElementById('search').value='';
+  if(baseKey!=='todos') document.getElementById('f-depto').value=baseKey;
+  // Show/hide filter tabs
+  const noExtras=baseKey==='administrativo';
+  document.getElementById('filter-tabs').style.display=noExtras?'none':'flex'; document.getElementById('filter-tabs').style.background='#0f0e0c';
+  setFilter('todos', false); // reset filter without re-render
+  renderList();
+  goTo('s-list');
+}
+
+// ── Screen 2: List ──────────────────────────────────────
+function P_empRowHTML(e){
+  const isExtra=e.depto.includes('_extra');
+  const col=DEPTS[e.depto.replace('_extra','')]?.color||'#c9a84c';
+  return`<div class="emp-row" onclick="openDetail('${e.id}')">
+    <div class="emp-av" style="background:${col}">${initials(e.nombre)}</div>
+    <div class="emp-row-info">
+      <div class="emp-row-name">${e.nombre}</div>
+      <div class="emp-row-sub">${e.cargo} · ${e.cedula||'—'}</div>
+    </div>
+    ${isExtra
+      ?`<span style="background:rgba(232,201,106,.12);border:1px dashed rgba(232,201,106,.3);
+             border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:#e8c96a;white-space:nowrap;">⚡ Por día</span>`
+      :`<span style="background:rgba(76,170,110,.12);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;color:#4caa6e;white-space:nowrap;">● Activo</span>`
+    }
+    <span class="emp-row-arrow">›</span>
+  </div>`;
+}
+
+function renderList(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const baseKey=activeDept.replace('_extra','');
+
+  let pool;
+  if(baseKey==='todos') pool=[...employees];
+  else pool=employees.filter(e=>e.depto===baseKey||e.depto===baseKey+'_extra');
+
+  if(q) pool=pool.filter(e=>
+    e.nombre.toLowerCase().includes(q)||
+    e.cargo.toLowerCase().includes(q)||
+    (e.cedula||'').includes(q)
+  );
+  // Apply fijo/extra filter
+  if(activeFilter==='fijos')  pool=pool.filter(e=>!e.depto.includes('_extra'));
+  if(activeFilter==='extras') pool=pool.filter(e=> e.depto.includes('_extra'));
+
+  if(!pool.length){
+    document.getElementById('emp-list').innerHTML=`
+      <div style="text-align:center;padding:40px;color:#9a9080;font-size:13px;">
+        <div style="font-size:36px;margin-bottom:10px;opacity:.4">👤</div>
+        Sin empleados en este departamento
+      </div>`;
+    return;
+  }
+
+  const fijos =pool.filter(e=>!e.depto.includes('_extra'));
+  const extras=pool.filter(e=> e.depto.includes('_extra'));
+  let out='';
+
+  if(activeFilter==='fijos'){
+    out+=`<div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:1.5px;padding:0 2px 10px;">📋 Personal Fijo · ${fijos.length}</div>`;
+    out+=fijos.map(P_empRowHTML).join('');
+  } else if(activeFilter==='extras'){
+    out+=`<div style="font-size:10px;color:#e8c96a;text-transform:uppercase;letter-spacing:1.5px;padding:0 2px 10px;display:flex;align-items:center;gap:5px;"><span>⚡</span> Extras por Día · ${extras.length}</div>`;
+    out+=extras.map(P_empRowHTML).join('');
+  } else {
+    // Todos: show fijos first, then extras with separator
+    if(fijos.length){
+      out+=`<div style="font-size:10px;color:#9a9080;text-transform:uppercase;letter-spacing:1.5px;padding:0 2px 10px;">📋 Personal Fijo · ${fijos.length}</div>`;
+      out+=fijos.map(P_empRowHTML).join('');
+    }
+    if(extras.length){
+      out+=`<div style="font-size:10px;color:#e8c96a;text-transform:uppercase;letter-spacing:1.5px;padding:0 2px 10px;margin-top:14px;display:flex;align-items:center;gap:5px;"><span>⚡</span> Extras por Día · ${extras.length}</div>`;
+      out+=extras.map(P_empRowHTML).join('');
+    }
+  }
+
+  document.getElementById('emp-list').innerHTML=out;
+}
+
+// ── Screen 3: Detail ────────────────────────────────────
+function openDetail(id){
+  const e=employees.find(x=>x.id===id);
+  if(!e)return;
+  currentEmpId=id;
+  const col=DEPTS[e.depto]?.color||'#c9a84c';
+  document.getElementById('d-av').textContent=initials(e.nombre);
+  document.getElementById('d-av').style.background=col;
+  document.getElementById('d-name').textContent=e.nombre;
+  const isExtra=e.depto.includes('_extra');
+  document.getElementById('d-cargo').innerHTML=`${DEPTS[e.depto]?.icon||''} ${DEPTS[e.depto]?.name||''} · ${e.cargo}${isExtra?' <span style="background:rgba(255,200,0,.15);color:#e8c96a;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;margin-left:4px;">⚡ EXTRA / DÍA</span>':''}`;
+  document.getElementById('d-cedula').textContent=e.cedula||'—';
+  document.getElementById('d-tel').textContent=e.tel||'—';
+  document.getElementById('d-nac').textContent=fmtDate(e.nac);
+  document.getElementById('d-ingreso').textContent=fmtDate(e.ingreso);
+  document.getElementById('d-salario').textContent=P_fmt$(e.salario);
+
+  document.getElementById('d-camisa').textContent=e.camisa||'—';
+  document.getElementById('d-pantalon').textContent=e.pantalon||'—';
+  document.getElementById('d-zapatos').textContent=e.zapatos||'—';
+  // Notas
+  if(e.notas){
+    document.getElementById('d-notas').textContent=e.notas;
+    document.getElementById('d-notas-wrap').classList.remove('hidden');
+  } else {
+    document.getElementById('d-notas-wrap').classList.add('hidden');
+  }
+  // Cédula photos
+  ['frontal','trasera'].forEach(side=>{
+    const img=document.getElementById('img-'+side);
+    const ph=document.getElementById('ph-'+side);
+    const stored=e['cedula_'+side];
+    if(stored){img.src=stored;img.classList.remove('hidden');ph.classList.add('hidden');}
+    else{img.classList.add('hidden');img.src='';ph.classList.remove('hidden');}
+  });
+  goTo('s-detail');
+}
+
+function triggerPhoto(side){document.getElementById('inp-'+side).click();}
+function loadPhoto(inp,side){
+  const file=inp.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const e=employees.find(x=>x.id===currentEmpId); if(!e)return;
+    e['cedula_'+side]=ev.target.result;
+    save();
+    document.getElementById('img-'+side).src=ev.target.result;
+    document.getElementById('img-'+side).classList.remove('hidden');
+    document.getElementById('ph-'+side).classList.add('hidden');
+    showToast('✓ Foto guardada');
+  };
+  reader.readAsDataURL(file);
+}
+
+function editCurrent(){
+  const e=employees.find(x=>x.id===currentEmpId);
+  if(e)openModal(e);
+}
+function deleteCurrent(){
+  if(!confirm('¿Eliminar este empleado?'))return;
+  employees=employees.filter(x=>x.id!==currentEmpId);
+  save();renderList();goTo('s-list');
+  showToast('Empleado eliminado');
+}
+
+// ── Modal ───────────────────────────────────────────────
+function openModal(e=null){
+  document.getElementById('m-title').textContent=e?'Editar Empleado':'Agregar Empleado';
+  document.getElementById('m-sub').textContent=e?e.nombre:'Nueva ficha de empleado';
+  document.getElementById('f-id').value=e?.id||'';
+  ['nombre','cedula','cargo','tel','salario','pantalon','zapatos','notas'].forEach(k=>{
+    document.getElementById('f-'+k).value=e?.[k]||'';
+  });
+  const baseDepto=(e?.depto||'').replace('_extra','');
+  document.getElementById('f-depto').value=baseDepto||(activeDept.replace('_extra','')!=='todos'?activeDept.replace('_extra',''):'administrativo');
+
+  document.getElementById('f-vinculo').value=(e?.depto||'').includes('_extra')?'extra':'fijo';
+  // Disable extras for administrativo
+  document.getElementById('f-depto').onchange=function(){
+    const v=document.getElementById('f-vinculo');
+    if(this.value==='administrativo'){v.value='fijo';v.disabled=true;}
+    else{v.disabled=false;}
+  };
+  document.getElementById('f-depto').dispatchEvent(new Event('change'));
+  document.getElementById('f-nac').value=e?.nac||'';
+  document.getElementById('f-ingreso').value=e?.ingreso||'';
+  document.getElementById('f-camisa').value=e?.camisa||'';
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('modal').classList.add('hidden');}
+
+function saveEmp(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  const cargo=document.getElementById('f-cargo').value.trim();
+  if(!nombre||!cargo){showToast('⚠️ Nombre y cargo son obligatorios');return;}
+  const id=document.getElementById('f-id').value;
+  const existing=id?employees.find(e=>e.id===id):null;
+  const vinculo=document.getElementById('f-vinculo').value;
+  const deptoBase=document.getElementById('f-depto').value.replace('_extra','');
+  const deptoFinal=vinculo==='extra'&&deptoBase!=='administrativo'?deptoBase+'_extra':deptoBase;
+  const emp={
+    id:id||uid(), nombre, cargo,
+    cedula:document.getElementById('f-cedula').value.trim(),
+    depto:deptoFinal,
+    estado:'activo',
+    tel:document.getElementById('f-tel').value.trim(),
+    nac:document.getElementById('f-nac').value,
+    ingreso:document.getElementById('f-ingreso').value,
+    salario:document.getElementById('f-salario').value,
+    camisa:document.getElementById('f-camisa').value,
+    pantalon:document.getElementById('f-pantalon').value.trim(),
+    zapatos:document.getElementById('f-zapatos').value.trim(),
+    notas:document.getElementById('f-notas').value.trim(),
+    cedula_frontal:existing?.cedula_frontal||null,
+    cedula_trasera:existing?.cedula_trasera||null,
+  };
+  if(id){const i=employees.findIndex(e=>e.id===id);if(i>=0)employees[i]=emp;}
+  else employees.push(emp);
+  save();closeModal();renderList();
+  if(id&&currentEmpId===id)openDetail(id);
+  showToast(id?'✓ Empleado actualizado':'✓ Empleado agregado');
+}
+
+// ── Import Excel ────────────────────────────────────────
+function importExcel(inp){
+  const file=inp.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      let added=0, updated=0;
+      rows.forEach(row=>{
+        const nombre=String(row['Nombre']||row['nombre']||row['NOMBRE']||'').trim();
+        if(!nombre)return;
+        const cedula=String(row['Cedula']||row['Cédula']||row['cedula']||row['CC']||'').trim();
+        const existing=cedula?employees.find(e=>e.cedula===cedula):null;
+        const mapDepto=(d,tipo)=>{
+          if(!d)return'administrativo';
+          const dstr=String(d).toLowerCase();
+          const isExtra=String(tipo||'').toLowerCase().includes('extra')||String(tipo||'').toLowerCase().includes('día')||String(tipo||'').toLowerCase().includes('dia');
+          let base='administrativo';
+          if(dstr.includes('coc'))base='cocina';
+          else if(dstr.includes('serv')||dstr.includes('vent'))base='servicio';
+          else if(dstr.includes('aseo')||dstr.includes('mant'))base='aseo';
+          return(isExtra&&base!=='administrativo')?base+'_extra':base;
+        };
+        const emp={
+          id:existing?.id||uid(), nombre,cedula,
+          cargo:String(row['Cargo']||row['cargo']||'').trim(),
+          depto:mapDepto(row['Departamento']||row['departamento']||row['Depto']||'', row['Vinculacion']||row['Vinculación']||row['Tipo']||''),
+          estado:String(row['Estado']||row['estado']||'activo').trim().toLowerCase()||'activo',
+          tel:String(row['Telefono']||row['Teléfono']||row['tel']||'').trim(),
+          nac:String(row['Nacimiento']||row['nacimiento']||'').trim(),
+          ingreso:String(row['Ingreso']||row['ingreso']||'').trim(),
+          salario:String(row['Salario']||row['salario']||'').trim(),
+          camisa:String(row['Camisa']||row['camisa']||'').trim(),
+          pantalon:String(row['Pantalon']||row['Pantalón']||'').trim(),
+          zapatos:String(row['Zapatos']||row['zapatos']||'').trim(),
+          notas:String(row['Notas']||row['notas']||'').trim(),
+          cedula_frontal:existing?.cedula_frontal||null,
+          cedula_trasera:existing?.cedula_trasera||null,
+        };
+        if(existing){employees[employees.indexOf(existing)]=emp;updated++;}
+        else{employees.push(emp);added++;}
+      });
+      save();
+      showToast(`✓ ${added} agregados · ${updated} actualizados`);
+    }catch(err){showToast('Error al leer el archivo: '+err.message);}
+    inp.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── Export ──────────────────────────────────────────────
+let exportOpt='todos';
+function openExportModal(){
+  selectExportOpt('todos');
+  document.getElementById('export-modal').classList.remove('hidden');
+}
+function closeExportModal(){ document.getElementById('export-modal').classList.add('hidden'); }
+function selectExportOpt(opt){
+  exportOpt=opt;
+  document.querySelectorAll('.exp-opt').forEach(b=>b.classList.remove('active'));
+  document.getElementById('exp-opt-'+opt).classList.add('active');
+}
+
+function generateReport(){
+  const DEPT_ORDER=['administrativo','cocina','servicio','aseo'];
+  const DEPT_INFO={
+    administrativo:{name:'Administrativo', icon:'🏢', color:'#C9A84C'},
+    cocina:        {name:'Cocina',         icon:'🍳', color:'#C97A4C'},
+    servicio:      {name:'Servicio y Ventas',icon:'🛎️',color:'#4CAA6E'},
+    aseo:          {name:'Aseo y Mantenimiento',icon:'🧹',color:'#4C8EC9'},
+  };
+
+  const fmtDate=d=>{if(!d)return'—';const dt=new Date(d+'T12:00');return dt.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'});};
+  const fmt$=n=>n?'$'+parseInt(n).toLocaleString('es-CO'):'—';
+  const initials=n=>n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+
+  // Build dept sections
+  const deptsToShow = exportOpt==='todos' ? DEPT_ORDER : [exportOpt];
+
+  let sectionsHTML='';
+  deptsToShow.forEach(key=>{
+    const info=DEPT_INFO[key];
+    const fijos= employees.filter(e=>e.depto===key);
+    const extras=employees.filter(e=>e.depto===key+'_extra');
+    const all=[...fijos,...extras];
+    if(all.length===0) return;
+
+    let rows='';
+    if(fijos.length>0){
+      rows+=`<tr><td colspan="7" style="background:#1a1a18;padding:6px 10px;font-size:10px;color:#9a9080;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #2e2b25;">📋 PERSONAL FIJO — ${fijos.length} empleado${fijos.length!==1?'s':''}</td></tr>`;
+      fijos.forEach((e,i)=>{
+        rows+=`<tr style="background:${i%2===0?'#1e1c1a':'#181614'}">
+          <td style="padding:8px 10px;font-weight:700;color:#f5edd8;">${e.nombre}</td>
+          <td style="padding:8px 10px;color:#a09585;">${e.cedula||'—'}</td>
+          <td style="padding:8px 10px;color:#d0c8b8;">${e.cargo}</td>
+          <td style="padding:8px 10px;color:#a09585;">${e.tel||'—'}</td>
+          <td style="padding:8px 10px;color:#a09585;">${fmtDate(e.ingreso)}</td>
+          <td style="padding:8px 10px;color:#4caa6e;font-weight:600;">${P_fmt$(e.salario)}</td>
+          <td style="padding:8px 10px;color:#a09585;font-size:11px;">${[e.camisa,e.pantalon,e.zapatos].filter(Boolean).join(' / ')||'—'}</td>
+        </tr>`;
+      });
+    }
+    if(extras.length>0){
+      rows+=`<tr><td colspan="7" style="background:#1a1a14;padding:6px 10px;font-size:10px;color:#e8c96a;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #2e2b25;">⚡ EXTRAS POR DÍA — ${extras.length} empleado${extras.length!==1?'s':''}</td></tr>`;
+      extras.forEach((e,i)=>{
+        rows+=`<tr style="background:${i%2===0?'#1e1c16':'#181612'}">
+          <td style="padding:8px 10px;font-weight:700;color:#f5edd8;">${e.nombre}</td>
+          <td style="padding:8px 10px;color:#a09585;">${e.cedula||'—'}</td>
+          <td style="padding:8px 10px;color:#d0c8b8;">${e.cargo}</td>
+          <td style="padding:8px 10px;color:#a09585;">${e.tel||'—'}</td>
+          <td style="padding:8px 10px;color:#a09585;">${fmtDate(e.ingreso)}</td>
+          <td style="padding:8px 10px;color:#4caa6e;font-weight:600;">${P_fmt$(e.salario)}</td>
+          <td style="padding:8px 10px;color:#a09585;font-size:11px;">${[e.camisa,e.pantalon,e.zapatos].filter(Boolean).join(' / ')||'—'}</td>
+        </tr>`;
+      });
+    }
+
+    sectionsHTML+=`
+    <div class="dept-section">
+      <div class="dept-title" style="border-left:4px solid ${info.color};">
+        <span class="dept-icon">${info.icon}</span>
+        <div>
+          <span class="dept-name">${info.name}</span>
+          <span class="dept-sub">${all.length} empleado${all.length!==1?'s':''} · ${fijos.length} fijo${fijos.length!==1?'s':''} · ${extras.length} extra${extras.length!==1?'s':''}</span>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre Completo</th><th>Cédula</th><th>Cargo</th>
+            <th>Teléfono</th><th>F. Ingreso</th><th>Salario</th><th>Tallas</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  });
+
+  const totalEmps=deptsToShow.reduce((s,k)=>s+employees.filter(e=>e.depto===k||e.depto===k+'_extra').length,0);
+  const reportTitle=exportOpt==='todos'?'Informe General de Personal':('Informe de Personal — '+(DEPT_INFO[exportOpt]?.name||''));
+  const now=new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'});
+
+  const reportHTML=`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>${reportTitle} · La Matriarca</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0f0e0c;color:#e8e0d0;font-family:Arial,sans-serif;font-size:12px;padding:24px;}
+  .report-header{text-align:center;padding:20px 0 16px;border-bottom:2px solid #c9a84c;margin-bottom:20px;}
+  .report-header h1{font-size:22px;color:#c9a84c;margin-bottom:4px;letter-spacing:1px;}
+  .report-header h2{font-size:15px;color:#f5edd8;margin-bottom:6px;}
+  .report-header p{font-size:11px;color:#9a9080;}
+  .report-meta{display:flex;justify-content:space-between;background:#1a1814;border-radius:8px;
+    padding:10px 16px;margin-bottom:20px;font-size:11px;color:#9a9080;flex-wrap:wrap;gap:8px;}
+  .report-meta b{color:#e8e0d0;}
+  .dept-section{margin-bottom:28px;}
+  .dept-title{display:flex;align-items:center;gap:10px;padding:10px 14px;
+    background:#1a1814;border-radius:8px 8px 0 0;margin-bottom:0;}
+  .dept-icon{font-size:20px;}
+  .dept-name{font-size:14px;font-weight:700;color:#f5edd8;display:block;}
+  .dept-sub{font-size:11px;color:#9a9080;}
+  table{width:100%;border-collapse:collapse;border-radius:0 0 8px 8px;overflow:hidden;}
+  th{background:#161412;color:#9a9080;padding:8px 10px;font-size:10px;text-transform:uppercase;
+    letter-spacing:1px;text-align:left;border-bottom:1px solid #2e2b25;}
+  td{border-bottom:1px solid #1a1814;}
+  .report-footer{text-align:center;margin-top:28px;padding-top:14px;
+    border-top:1px solid #2e2b25;font-size:10px;color:#9a9080;}
+  @media print{
+    body{background:#fff;color:#000;padding:16px;}
+    .report-header h1{color:#8B6914;}
+    .report-header h2{color:#000;}
+    .report-header p,.report-meta,.dept-sub{color:#555;}
+    .dept-title{background:#f5f0e8;border-left-color:inherit;}
+    .dept-name{color:#000;}
+    th{background:#e8e0d0;color:#333;}
+    td,tr{color:#000!important;background:#fff!important;}
+    table{border:1px solid #ccc;}
+    th,td{border:1px solid #ddd!important;}
+    .report-meta{background:#f5f5f5;border:1px solid #ddd;}
+    .report-footer{color:#777;border-top:1px solid #ccc;}
+  }
+</style>
+</head>
+<body>
+<div class="report-header">
+  <h1>🌿 LA MATRIARCA · BARRANQUILLA</h1>
+  <h2>${reportTitle}</h2>
+  <p>Generado el ${now}</p>
+</div>
+<div class="report-meta">
+  <span>📅 Fecha: <b>${now}</b></span>
+  <span>👥 Total empleados: <b>${totalEmps}</b></span>
+  <span>🏢 Cobertura: <b>${exportOpt==='todos'?'Todos los departamentos':DEPT_INFO[exportOpt]?.name}</b></span>
+</div>
+${sectionsHTML}
+<div class="report-footer">
+  La Matriarca Barranquilla · Informe generado automáticamente desde el Sistema de Gestión de Personal
+</div>
+\u003cscript\u003esetTimeout(()=>window.print(),300);\u003c\/script\u003e
+</body></html>`;
+
+  closeExportModal();
+  const w=window.open('','_blank','width=900,height=700');
+  w.document.write(reportHTML);
+  w.document.close();
+}
+
+// ── Init ────────────────────────────────────────────────
+
+
+function P_showToast(m){showToast(m);}
+
+renderDepts();
+
+</script>
+</body>
+</html>
