@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>La Matriarca · Personal</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -56,6 +54,7 @@ html,body{background:#0f0e0c!important;color:#e8e0d0;font-family:'DM Sans',sans-
 
 .dept-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 24px;background:#0f0e0c;}
 @media(min-width:600px){.dept-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:360px){.dept-grid{grid-template-columns:1fr;}}
 .dept-card{background:#211f1b;border:1px solid #2e2b25;border-radius:14px;
   padding:20px 14px;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
 .dept-card::before{content:'';position:absolute;inset:0;opacity:0;
@@ -159,6 +158,7 @@ html,body{background:#0f0e0c!important;color:#e8e0d0;font-family:'DM Sans',sans-
 .fg textarea{resize:vertical;min-height:60px;}
 .fg select option{background:#211f1b;}
 .fgrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:380px){.fgrow{grid-template-columns:1fr;}}
 .modal-acts{display:flex;gap:8px;margin-top:14px;}
 .m-cancel{flex:1;background:#161412;border:1px solid #2e2b25;border-radius:8px;
   color:#9a9080;padding:10px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
@@ -447,36 +447,22 @@ const DEPTS = {
 };
 const SL = {activo:'Activo',vacaciones:'Vacaciones',incapacidad:'Incapacidad',inactivo:'Inactivo'};
 
-// ── Firebase ─────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyCbiiYiVaLLXPOuErHiPG_aXmAZV6OwvRY",
-  authDomain: "la-matriarca-6ada3.firebaseapp.com",
-  projectId: "la-matriarca-6ada3",
-  storageBucket: "la-matriarca-6ada3.firebasestorage.app",
-  messagingSenderId: "891820591318",
-  appId: "1:891820591318:web:placeholder"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const COLL = 'personal';
-
 // ── State ───────────────────────────────────────────────
-let employees = [];
+let employees = JSON.parse(localStorage.getItem('lm_personal2') || '[]');
 let activeDept = 'todos';
 let currentEmpId = null;
-let _dbLoaded = false;
 
-// Carga inicial desde Firestore
-async function loadFromDB(){
-  try{
-    const snap = await db.collection(COLL).get();
-    employees = snap.docs.map(d=>({id:d.id,...d.data()}));
-    _dbLoaded = true;
-    renderDepts();
-    renderList();
-  }catch(e){
-    showToast('⚠️ Error cargando datos: '+e.message);
-  }
+if(!employees.length){
+  employees=[
+    {id:'1',nombre:'María González Ramos',cedula:'1040123456',cargo:'Gerente General',depto:'administrativo',estado:'activo',tel:'3001234567',nac:'1985-05-15',ingreso:'2020-01-15',salario:'4500000',camisa:'M',pantalon:'28',zapatos:'36',notas:''},
+    {id:'2',nombre:'Carlos Martínez',cedula:'1040234567',cargo:'Contador',depto:'administrativo',estado:'activo',tel:'3102345678',nac:'1990-08-20',ingreso:'2021-03-01',salario:'2800000',camisa:'L',pantalon:'32',zapatos:'42',notas:''},
+    {id:'3',nombre:'Luisa Pérez Ortiz',cedula:'1040345678',cargo:'Chef Principal',depto:'cocina',estado:'activo',tel:'3153456789',nac:'1988-11-03',ingreso:'2019-06-10',salario:'3200000',camisa:'S',pantalon:'26',zapatos:'35',notas:'Especialista en cocina costeña'},
+    {id:'4',nombre:'Andrés Ramos',cedula:'1040456789',cargo:'Sous Chef',depto:'cocina',estado:'activo',tel:'3204567890',nac:'1995-02-14',ingreso:'2021-08-20',salario:'2200000',camisa:'M',pantalon:'30',zapatos:'40',notas:''},
+    {id:'5',nombre:'Valentina Torres',cedula:'1040567890',cargo:'Mesera',depto:'servicio',estado:'activo',tel:'3005678901',nac:'1998-07-22',ingreso:'2022-01-10',salario:'1600000',camisa:'XS',pantalon:'24',zapatos:'34',notas:''},
+    {id:'6',nombre:'Juan Herrera Polo',cedula:'1040678901',cargo:'Bartender',depto:'servicio',estado:'vacaciones',tel:'3106789012',nac:'1993-03-30',ingreso:'2021-11-05',salario:'1800000',camisa:'L',pantalon:'32',zapatos:'43',notas:'Regresa 15 de junio'},
+    {id:'7',nombre:'Patricia Díaz',cedula:'1040789012',cargo:'Auxiliar de Limpieza',depto:'aseo',estado:'activo',tel:'3207890123',nac:'1980-09-11',ingreso:'2023-02-01',salario:'1300000',camisa:'M',pantalon:'30',zapatos:'37',notas:''},
+  ];
+  save();
 }
 
 // ── Utils ───────────────────────────────────────────────
@@ -489,8 +475,7 @@ function setFilter(f, doRender=true){
   });
   if(doRender) renderList();
 }
-// save() ya no se usa directamente — cada operación usa Firestore
-function save(){/* legacy — replaced by Firestore */}
+function save(){localStorage.setItem('lm_personal2',JSON.stringify(employees));}
 function fmt$(n){return n?'$'+parseInt(n).toLocaleString('es-CO'):'-';}
 function fmtDate(d){if(!d)return'—';const dt=new Date(d+'T12:00');return dt.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'});}
 function initials(n){return n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();}
@@ -692,12 +677,10 @@ function triggerPhoto(side){document.getElementById('inp-'+side).click();}
 function loadPhoto(inp,side){
   const file=inp.files[0]; if(!file)return;
   const reader=new FileReader();
-  reader.onload=async ev=>{
+  reader.onload=ev=>{
     const e=employees.find(x=>x.id===currentEmpId); if(!e)return;
     e['cedula_'+side]=ev.target.result;
-    try{
-      await db.collection(COLL).doc(currentEmpId).update({['cedula_'+side]:ev.target.result});
-    }catch(err){showToast('⚠️ Error guardando foto: '+err.message); return;}
+    save();
     document.getElementById('img-'+side).src=ev.target.result;
     document.getElementById('img-'+side).classList.remove('hidden');
     document.getElementById('ph-'+side).classList.add('hidden');
@@ -710,14 +693,11 @@ function editCurrent(){
   const e=employees.find(x=>x.id===currentEmpId);
   if(e)openModal(e);
 }
-async function deleteCurrent(){
+function deleteCurrent(){
   if(!confirm('¿Eliminar este empleado?'))return;
-  try{
-    await db.collection(COLL).doc(currentEmpId).delete();
-    employees=employees.filter(x=>x.id!==currentEmpId);
-    renderDepts();renderList();goTo('s-list');
-    showToast('Empleado eliminado');
-  }catch(e){showToast('⚠️ Error eliminando: '+e.message);}
+  employees=employees.filter(x=>x.id!==currentEmpId);
+  save();renderDepts();renderList();goTo('s-list');
+  showToast('Empleado eliminado');
 }
 
 // ── Modal ───────────────────────────────────────────────
@@ -746,7 +726,7 @@ function openModal(e=null){
 }
 function closeModal(){document.getElementById('modal').classList.add('hidden');}
 
-async function saveEmp(){
+function saveEmp(){
   const nombre=document.getElementById('f-nombre').value.trim();
   const cargo=document.getElementById('f-cargo').value.trim();
   if(!nombre||!cargo){showToast('⚠️ Nombre y cargo son obligatorios');return;}
@@ -756,7 +736,7 @@ async function saveEmp(){
   const deptoBase=document.getElementById('f-depto').value.replace('_extra','');
   const deptoFinal=vinculo==='extra'&&deptoBase!=='administrativo'?deptoBase+'_extra':deptoBase;
   const emp={
-    nombre, cargo,
+    id:id||uid(), nombre, cargo,
     cedula:document.getElementById('f-cedula').value.trim(),
     depto:deptoFinal,
     estado:'activo',
@@ -771,32 +751,23 @@ async function saveEmp(){
     cedula_frontal:existing?.cedula_frontal||null,
     cedula_trasera:existing?.cedula_trasera||null,
   };
-  try{
-    if(id){
-      await db.collection(COLL).doc(id).set(emp);
-      const i=employees.findIndex(e=>e.id===id);
-      if(i>=0)employees[i]={id,...emp};
-    } else {
-      const docRef=await db.collection(COLL).add(emp);
-      employees.push({id:docRef.id,...emp});
-    }
-    closeModal();renderDepts();renderList();
-    if(id&&currentEmpId===id)openDetail(id);
-    showToast(id?'✓ Empleado actualizado':'✓ Empleado agregado');
-  }catch(e){showToast('⚠️ Error guardando: '+e.message);}
+  if(id){const i=employees.findIndex(e=>e.id===id);if(i>=0)employees[i]=emp;}
+  else employees.push(emp);
+  save();closeModal();renderDepts();renderList();
+  if(id&&currentEmpId===id)openDetail(id);
+  showToast(id?'✓ Empleado actualizado':'✓ Empleado agregado');
 }
 
 // ── Import Excel ────────────────────────────────────────
 function importExcel(inp){
   const file=inp.files[0]; if(!file)return;
   const reader=new FileReader();
-  reader.onload=async ev=>{
+  reader.onload=ev=>{
     try{
       const wb=XLSX.read(ev.target.result,{type:'array'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
       let added=0, updated=0;
-      const batch=db.batch();
       rows.forEach(row=>{
         const nombre=String(row['Nombre']||row['nombre']||row['NOMBRE']||'').trim();
         if(!nombre)return;
@@ -813,7 +784,7 @@ function importExcel(inp){
           return(isExtra&&base!=='administrativo')?base+'_extra':base;
         };
         const emp={
-          nombre,cedula,
+          id:existing?.id||uid(), nombre,cedula,
           cargo:String(row['Cargo']||row['cargo']||'').trim(),
           depto:mapDepto(row['Departamento']||row['departamento']||row['Depto']||'', row['Vinculacion']||row['Vinculación']||row['Tipo']||''),
           estado:String(row['Estado']||row['estado']||'activo').trim().toLowerCase()||'activo',
@@ -828,19 +799,10 @@ function importExcel(inp){
           cedula_frontal:existing?.cedula_frontal||null,
           cedula_trasera:existing?.cedula_trasera||null,
         };
-        if(existing){
-          batch.set(db.collection(COLL).doc(existing.id), emp);
-          employees[employees.indexOf(existing)]={id:existing.id,...emp};
-          updated++;
-        } else {
-          const ref=db.collection(COLL).doc();
-          batch.set(ref, emp);
-          employees.push({id:ref.id,...emp});
-          added++;
-        }
+        if(existing){employees[employees.indexOf(existing)]=emp;updated++;}
+        else{employees.push(emp);added++;}
       });
-      await batch.commit();
-      renderDepts();
+      save();renderDepts();
       showToast(`✓ ${added} agregados · ${updated} actualizados`);
     }catch(err){showToast('Error al leer el archivo: '+err.message);}
     inp.value='';
@@ -1008,7 +970,7 @@ ${sectionsHTML}
 }
 
 // ── Init ────────────────────────────────────────────────
-loadFromDB();
+renderDepts();
 
 function goHome(){ window.location.replace('https://memofontalvo-ai.github.io/LA-MATRIARCA-/'); }
 function LM_goHome(){ goHome(); }

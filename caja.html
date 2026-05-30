@@ -754,6 +754,17 @@
   select option { background: var(--dark3); }
   * { box-sizing: border-box; }
   img, video { max-width: 100%; }
+
+  /* ══ EXTRA RESPONSIVE ══ */
+  @media (max-width: 360px) {
+    .container { padding: 12px 8px; }
+    .card { padding: 12px 10px; }
+    .field input, .field select { font-size: 16px; } /* evita zoom en iOS */
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 1200px) {
+    .container { max-width: 1200px; }
+  }
 </style>
 </head>
 <body>
