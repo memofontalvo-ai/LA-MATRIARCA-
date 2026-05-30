@@ -840,24 +840,41 @@ function readExcel(file,periodLabel,year,month){
       showToast(`✓ ${file.name} — ${rows.toLocaleString()} registros`);
 
       // ── Guardar en Firebase ──
-      showToast('💾 Guardando en base de datos...');
+      // Mostrar banner de progreso permanente
+      let banner = document.getElementById('save-banner');
+      if(!banner) {
+        banner = document.createElement('div');
+        banner.id = 'save-banner';
+        banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#c9a84c;color:#0f0e0c;text-align:center;padding:14px;font-weight:700;font-size:15px;z-index:999;';
+        document.body.appendChild(banner);
+      }
+      banner.textContent = '💾 Guardando en Firebase... espera';
+      banner.style.display = 'block';
+
       try {
-        // Guardar metadatos del archivo
         await db.collection(COL_FILES).doc(fileId).set(fileMeta);
 
-        // Guardar registros en lotes de 400
         const BATCH_SIZE = 400;
+        const totalLotes = Math.ceil(newRows.length / BATCH_SIZE);
         for(let i = 0; i < newRows.length; i += BATCH_SIZE) {
+          const lote = Math.floor(i/BATCH_SIZE) + 1;
+          banner.textContent = `💾 Guardando lote ${lote}/${totalLotes}... NO CIERRES LA APP`;
           const batch = db.batch();
           newRows.slice(i, i + BATCH_SIZE).forEach(r => {
             batch.set(db.collection(COL_DATA).doc(uid()), r);
           });
           await batch.commit();
         }
-        showToast(`✅ ${rows.toLocaleString()} registros guardados en Firebase`);
+        banner.style.background = '#4caa6e';
+        banner.style.color = '#fff';
+        banner.textContent = `✅ ${rows.toLocaleString()} registros guardados. Ya puedes cerrar.`;
+        setTimeout(() => { banner.style.display = 'none'; }, 5000);
       } catch(fbErr) {
+        banner.style.background = '#c94c4c';
+        banner.style.color = '#fff';
+        banner.textContent = '⚠️ Error: ' + fbErr.message;
+        setTimeout(() => { banner.style.display = 'none'; }, 5000);
         console.error('Firebase save error:', fbErr);
-        showToast('⚠️ Error guardando en Firebase: ' + fbErr.message);
       }
 
     }catch(err){showToast('Error: '+err.message);}
