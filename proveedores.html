@@ -4,20 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>La Matriarca · Control de Proveedores</title>
+<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCbiiYiVaLLXPOuErHiPG_aXmAZV6OwvRY",
-  authDomain: "la-matriarca-6ada3.firebaseapp.com",
-  projectId: "la-matriarca-6ada3"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const COL_FILES = 'proveedores_files';
-const COL_DATA  = 'proveedores_data';
-</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
 <style>
 
@@ -627,6 +616,9 @@ canvas{display:block;max-width:100%!important;}
 // ── Constants ─────────────────────
 const COLORS=['#c9a84c','#4caa6e','#4c8ec9','#c94c4c','#8e6ec9','#c97a4c','#6ec9b8'];
 const MESES=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// db se inicializa en window.onload después de que Firebase cargue
+let db, COL_FILES='proveedores_files', COL_DATA='proveedores_data';
 
 // ── State ─────────────────────────
 let allData=[],filesLoaded=[],pendingFile=null;
@@ -1298,6 +1290,30 @@ async function loadFromDB() {
     showToast('⚠️ Error cargando: ' + err.message);
   }
 }
+
+// Inicializar Firebase y cargar datos cuando todo esté listo
+function initFirebase() {
+  if (typeof firebase === 'undefined') {
+    setTimeout(initFirebase, 200); // esperar si firebase aún no cargó
+    return;
+  }
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyCbiiYiVaLLXPOuErHiPG_aXmAZV6OwvRY",
+        authDomain: "la-matriarca-6ada3.firebaseapp.com",
+        projectId: "la-matriarca-6ada3"
+      });
+    }
+    db = firebase.firestore();
+    loadFromDB();
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    showToast('⚠️ Error iniciando Firebase: ' + e.message);
+  }
+}
+
+window.addEventListener('load', initFirebase);
 
 </script>
 </body>
