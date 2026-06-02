@@ -769,8 +769,7 @@ function readExcel(file,periodLabel,year,month){
           const valorUnd=parseFloat(row['ValorUnidad']||0)||0;
           const cantRaw=parseFloat(row['Cantidad']||0)||0;
 
-          if(!nombre||codigo==='RT_001'||pres==='CONCEPTO'||costo<=0||costo<=1)return;
-          if(pres==='UND'&&valorUnd>0&&valorUnd<500)return;
+          if(!nombre||codigo==='RT_001'||pres==='CONCEPTO'||costo<=0)return;
 
           let rowYear=year, rowMonth=month;
           const fechaRaw=row['Fecha']||row['FECHA']||row['fecha']||row['FechaCompra']||row['Fecha Compra']||null;
