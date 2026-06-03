@@ -395,6 +395,7 @@ canvas{display:block;max-width:100%!important;}
       </div>
 
       <div class="files-loaded" id="files-loaded"></div>
+      <button id="btn-limpiar-todo" onclick="limpiarTodo()" style="display:none;margin-top:8px;width:100%;padding:10px;background:#c94c4c;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">🗑️ Limpiar todos los datos</button>
     </div>
 
     <!-- Empty -->
@@ -1338,11 +1339,24 @@ async function loadFromDB() {
     filesLoaded = filesSnap.docs.map(d => d.data());
     allData     = dataSnap.docs.map(d => d.data());
 
+    // Si allData tiene datos pero filesLoaded está vacío, reconstruir desde allData
+    if(allData.length > 0 && filesLoaded.length === 0){
+      const fileMap = {};
+      allData.forEach(r => {
+        if(!fileMap[r.fileId]){
+          fileMap[r.fileId] = {id:r.fileId, name:'Archivo cargado', periodoLabel:r.periodoLabel, year:r.year, month:r.month||0, rows:0};
+        }
+        fileMap[r.fileId].rows++;
+      });
+      filesLoaded = Object.values(fileMap);
+    }
+
     if (allData.length > 0) {
       refreshYearButtons();
       updateMonthSelector();
       renderFilesLoaded();
       renderDashboard();
+      document.getElementById('btn-limpiar-todo').style.display = 'block';
       showToast(`✅ ${allData.length.toLocaleString()} registros cargados`);
     } else {
       showToast('📋 Sin datos guardados aún');
