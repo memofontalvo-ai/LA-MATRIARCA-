@@ -766,112 +766,99 @@ function readExcel(file,periodLabel,year,month){
   const reader=new FileReader();
   reader.onload=async e=>{
     try{
-      const wb=XLSX.read(e.target.result,{type:'array', cellFormula:false, cellNF:false});
+      const wb=XLSX.read(e.target.result,{type:'array', cellDates:true});
       const fileId=uid();let rows=0;
       const newRows=[];
       const diag=[];
-      for(const sheet of wb.SheetNames){
-        let leidas=0, aceptadas=0;
-        let rNombre=0,rCodigo=0,rConcepto=0,rCosto=0,rError=0;
-        let primerError='';
-        let muestraCosto='';
+      // Estructura FIJA del archivo CON fecha (por posición de columna):
+      // 0=FechaDocumento 1=Proveedor 2=NombreProveedor 3=Codigo 4=Presentacion
+      // 5=Nombre 6=Cantidad 7=ValorUnidad 8=PorceIva 9=PorceInc 10=PorceDcto 11=CostoTotal
+      const C_FECHA=0, C_PROV=1, C_NOMPROV=2, C_CODIGO=3, C_PRES=4, C_NOMBRE=5, C_CANT=6, C_VALUNI=7, C_COSTO=11;
+
+      function aNumero(v){
+        if(typeof v==='number') return v;
+        if(v===null||v===undefined||v==='') return 0;
+        const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+        return isNaN(n)?0:n;
+      }
+      function aFecha(v, defYear, defMonth){
+        let d=null;
         try{
-          const data=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{defval:'',raw:true});
-          leidas=data.length;
-          console.log(`Hoja [${sheet}]: ${data.length} filas`);
-          let primera=true;
-          for(const row of data){
-            try{
-          const codigo=String(row['Codigo']||row['CODIGO']||'').trim();
-          const pres=String(row['Presentacion']||row['PRESENTACION']||'').trim().toUpperCase();
-          const nombre=String(row['Nombre']||row['NOMBRE']||'').trim();
-          const costoRaw=row['CostoTotal']||row['COSTOTOTAL']||row['Costo Total']||0;
-          const costo=typeof costoRaw==='number'?costoRaw:(parseFloat(String(costoRaw).replace(/[^0-9.-]/g,''))||0);
-          const valorUnd=parseFloat(row['ValorUnidad']||0)||0;
-          const cantRaw=parseFloat(row['Cantidad']||0)||0;
-
-          if(primera && sheet==='DISLICORES'){ muestraCosto=`costoRaw=${JSON.stringify(costoRaw)} costo=${costo} nombre="${nombre}" codigo="${codigo}" pres="${pres}"`; primera=false; }
-
-          if(!nombre){rNombre++;continue;}
-          if(codigo==='RT_001'){rCodigo++;continue;}
-          if(pres==='CONCEPTO'){rConcepto++;continue;}
-          if(costo<=0){rCosto++;continue;}
-
-          let rowYear=year, rowMonth=month;
-          const fechaRaw=row['FechaDocumento']||row['Fecha']||row['FECHA']||row['fecha']||row['FechaCompra']||row['Fecha Compra']||null;
-          if(fechaRaw){
-            try{
-              let d=null;
-              if(fechaRaw instanceof Date){
-                d=fechaRaw;
-              } else if(typeof fechaRaw==='number'){
-                d=new Date(Math.round((fechaRaw-25569)*86400*1000));
-              } else {
-                const s=String(fechaRaw).trim();
-                const dmy=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-                const ymd=s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-                if(dmy) d=new Date(parseInt(dmy[3]),parseInt(dmy[2])-1,parseInt(dmy[1]));
-                else if(ymd) d=new Date(parseInt(ymd[1]),parseInt(ymd[2])-1,parseInt(ymd[3]));
-                else d=new Date(s);
-              }
-              if(d&&!isNaN(d.getTime())){
-                rowYear=d.getFullYear();
-                rowMonth=d.getMonth()+1;
-              }
-            }catch(dateErr){}
+          if(v instanceof Date){ d=v; }
+          else if(typeof v==='number'){ d=new Date(Math.round((v-25569)*86400*1000)); }
+          else if(v){
+            const s=String(v).trim();
+            const dmy=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+            const ymd=s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+            if(ymd) d=new Date(parseInt(ymd[1]),parseInt(ymd[2])-1,parseInt(ymd[3]));
+            else if(dmy) d=new Date(parseInt(dmy[3]),parseInt(dmy[2])-1,parseInt(dmy[1]));
+            else d=new Date(s);
           }
-          const rowLabel=rowMonth&&rowMonth!==0?`${MESES[rowMonth]} ${rowYear}`:`Año ${rowYear}`;
+        }catch(e){ d=null; }
+        if(d && !isNaN(d.getTime())) return {year:d.getFullYear(), month:d.getMonth()+1};
+        return {year:defYear, month:defMonth};
+      }
 
-          let cantidad=cantRaw, unidad='und';
-          if(pres==='MIL'){
-            if(valorUnd>5000){
-              cantidad=cantRaw; unidad='und';
-            } else {
-              const nomUp=nombre.toUpperCase();
-              const sizeMatch=nomUp.match(/\b(1750|1500|1000|990|750|700|500|375|330|355|250|210|200)\s*(?:ML|CC)?\b/);
-              if(sizeMatch){
-                const bottleML=parseInt(sizeMatch[1]);
-                cantidad=cantRaw/bottleML;
-                unidad='bot';
-              } else if(valorUnd<200){
-                cantidad=cantRaw/1000;
-                unidad='L';
-              } else {
-                cantidad=cantRaw/750;
-                unidad='bot';
+      for(const sheet of wb.SheetNames){
+        let leidas=0, aceptadas=0, rSinNombre=0, rCosto=0, rError=0;
+        try{
+          // header:1 => cada fila es un ARRAY por posición (no por nombre de columna)
+          const matriz=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1, raw:true, defval:''});
+          // Saltar fila 0 (encabezados)
+          for(let i=1;i<matriz.length;i++){
+            const fila=matriz[i];
+            if(!fila || fila.length===0) continue;
+            leidas++;
+            try{
+              const nombre=String(fila[C_NOMBRE]||'').trim();
+              const codigo=String(fila[C_CODIGO]||'').trim();
+              const pres=String(fila[C_PRES]||'').trim().toUpperCase();
+              const costo=aNumero(fila[C_COSTO]);
+              const valorUnd=aNumero(fila[C_VALUNI]);
+              const cantRaw=aNumero(fila[C_CANT]);
+
+              // Filtros mínimos: descartar filas sin nombre o sin costo (totales, vacíos)
+              if(!nombre){ rSinNombre++; continue; }
+              if(codigo==='RT_001'){ continue; }
+              if(pres==='CONCEPTO'){ continue; }
+              if(costo<=0){ rCosto++; continue; }
+
+              const f=aFecha(fila[C_FECHA], year, month);
+              const rowYear=f.year, rowMonth=f.month;
+              const rowLabel=rowMonth&&rowMonth!==0?`${MESES[rowMonth]} ${rowYear}`:`Año ${rowYear}`;
+
+              let cantidad=cantRaw, unidad='und';
+              if(pres==='MIL'){
+                if(valorUnd>5000){ cantidad=cantRaw; unidad='und'; }
+                else {
+                  const sizeMatch=nombre.toUpperCase().match(/\b(1750|1500|1000|990|750|700|500|375|330|355|250|210|200)\s*(?:ML|CC)?\b/);
+                  if(sizeMatch){ cantidad=cantRaw/parseInt(sizeMatch[1]); unidad='bot'; }
+                  else if(valorUnd<200){ cantidad=cantRaw/1000; unidad='L'; }
+                  else { cantidad=cantRaw/750; unidad='bot'; }
+                }
               }
-            }
-          }
 
-          const rec={
-            proveedor:String(row['Proveedor']||'').trim(),
-            nombreProveedor:String(row['NombreProveedor']||sheet).trim(),
-            codigo,presentacion:pres,nombre,
-            cantidad,unidad,
-            valorUnidad:valorUnd,
-            costoTotal:costo,
-            year:rowYear, month:rowMonth,
-            periodoLabel:rowLabel,
-            fileId,hoja:sheet,fileName:file.name,
-          };
-          newRows.push(rec);
-          allData.push(rec);
-          rows++;
-          aceptadas++;
-          }catch(rowErr){ rError++; if(!primerError)primerError=rowErr.message; console.warn(`Fila ignorada en ${sheet}:`, rowErr); }
-          } // end for row
-        }catch(sheetErr){ console.error(`Error en hoja ${sheet}:`, sheetErr); diag.push(`${sheet}: ERROR HOJA ${sheetErr.message}`); }
-        let linea=`${sheet}: leídas ${leidas}, aceptadas ${aceptadas}`;
-        if(aceptadas<leidas){
-          linea+=` [rechazos: sinNombre=${rNombre} codRT=${rCodigo} concepto=${rConcepto} costo0=${rCosto} error=${rError}]`;
-        }
-        if(primerError) linea+=` ERR:"${primerError}"`;
-        if(muestraCosto) linea+=`\n  → ${muestraCosto}`;
-        diag.push(linea);
+              const rec={
+                proveedor:String(fila[C_PROV]||'').trim(),
+                nombreProveedor:String(fila[C_NOMPROV]||sheet).trim(),
+                codigo, presentacion:pres, nombre,
+                cantidad, unidad,
+                valorUnidad:valorUnd,
+                costoTotal:costo,
+                year:rowYear, month:rowMonth,
+                periodoLabel:rowLabel,
+                fileId, hoja:sheet, fileName:file.name,
+              };
+              newRows.push(rec);
+              allData.push(rec);
+              rows++; aceptadas++;
+            }catch(rowErr){ rError++; console.warn(`Fila ${i} ignorada en ${sheet}:`, rowErr); }
+          }
+        }catch(sheetErr){ console.error(`Error en hoja ${sheet}:`, sheetErr); diag.push(`${sheet}: ERROR ${sheetErr.message}`); }
+        diag.push(`${sheet}: ${aceptadas}/${leidas}`+((rSinNombre||rCosto||rError)?` (sinNombre:${rSinNombre} costo0:${rCosto} err:${rError})`:''));
       } // end for sheet
 
-      // Mostrar diagnóstico en pantalla
-      alert('DIAGNÓSTICO DE LECTURA:\n\n'+diag.join('\n\n')+`\n\nTOTAL: ${rows}`);
+      console.log('DIAGNÓSTICO:', diag.join(' | '), 'TOTAL:', rows);
 
       const fileMeta={id:fileId,name:file.name,periodoLabel:periodLabel,year,month,rows};
       filesLoaded.push(fileMeta);
