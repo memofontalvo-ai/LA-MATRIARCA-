@@ -772,7 +772,7 @@ function readExcel(file,periodLabel,year,month){
           if(!nombre||codigo==='RT_001'||pres==='CONCEPTO'||costo<=0)return;
 
           let rowYear=year, rowMonth=month;
-          const fechaRaw=row['Fecha']||row['FECHA']||row['fecha']||row['FechaCompra']||row['Fecha Compra']||null;
+          const fechaRaw=row['FechaDocumento']||row['Fecha']||row['FECHA']||row['fecha']||row['FechaCompra']||row['Fecha Compra']||null;
           if(fechaRaw){
             let d=null;
             if(fechaRaw instanceof Date){
@@ -852,7 +852,7 @@ function readExcel(file,periodLabel,year,month){
       try {
         await db.collection(COL_FILES).doc(fileId).set(fileMeta);
 
-        const BATCH_SIZE = 400;
+        const BATCH_SIZE = 200;
         const totalLotes = Math.ceil(newRows.length / BATCH_SIZE);
         for(let i = 0; i < newRows.length; i += BATCH_SIZE) {
           const lote = Math.floor(i/BATCH_SIZE) + 1;
@@ -862,6 +862,8 @@ function readExcel(file,periodLabel,year,month){
             batch.set(db.collection(COL_DATA).doc(uid()), r);
           });
           await batch.commit();
+          // Pausa de 300ms entre lotes para evitar timeout
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
         banner.style.background = '#4caa6e';
         banner.style.color = '#fff';
