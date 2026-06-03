@@ -890,6 +890,31 @@ function readExcel(file,periodLabel,year,month){
   reader.readAsArrayBuffer(file);
 }
 
+async function limpiarTodo(){
+  if(!confirm('¿Borrar TODOS los datos de proveedores?')) return;
+  try{
+    showToast('🗑️ Limpiando base de datos...');
+    // Borrar todos los archivos
+    const filesSnap = await db.collection(COL_FILES).get();
+    for(const doc of filesSnap.docs) await doc.ref.delete();
+    // Borrar todos los registros en lotes
+    const dataSnap = await db.collection(COL_DATA).get();
+    const BATCH = 400;
+    for(let i=0; i<dataSnap.docs.length; i+=BATCH){
+      const batch = db.batch();
+      dataSnap.docs.slice(i,i+BATCH).forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+    }
+    allData=[]; filesLoaded=[];
+    renderFilesLoaded(); refreshYearButtons(); updateMonthSelector();
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('empty-state').classList.remove('hidden');
+    const b=document.getElementById('btn-limpiar-todo');
+    if(b) b.style.display='none';
+    showToast('✅ Base de datos limpiada');
+  }catch(e){ showToast('⚠️ Error: '+e.message); }
+}
+
 async function removeFile(fileId){
   allData=allData.filter(r=>r.fileId!==fileId);
   filesLoaded=filesLoaded.filter(f=>f.id!==fileId);
@@ -924,6 +949,18 @@ function renderFilesLoaded(){
       <span class="chip-rows">${f.rows.toLocaleString()} reg.</span>
       <button class="chip-remove" onclick="removeFile('${f.id}')">✕</button>
     </div>`).join('');
+  
+  // Mostrar botón limpiar todo si hay archivos
+  let btnLimpiar = document.getElementById('btn-limpiar-todo');
+  if(!btnLimpiar){
+    btnLimpiar = document.createElement('button');
+    btnLimpiar.id = 'btn-limpiar-todo';
+    btnLimpiar.style.cssText = 'margin-top:8px;width:100%;padding:10px;background:#c94c4c;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;';
+    btnLimpiar.textContent = '🗑️ Limpiar todos los datos';
+    btnLimpiar.onclick = limpiarTodo;
+    document.getElementById('files-loaded').after(btnLimpiar);
+  }
+  btnLimpiar.style.display = filesLoaded.length > 0 ? 'block' : 'none';
 }
 
 // ── Filtered data ──────────────────
