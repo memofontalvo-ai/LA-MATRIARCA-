@@ -1388,16 +1388,24 @@ function renderComparativoAnual(){
       <td class="td-num" style="color:${diffColor};font-weight:700">${diffTxt}</td>
     </tr>`;
   }
-  // Fila de totales
-  const tot1=totalY1.reduce((a,b)=>a+b,0), tot2=totalY2.reduce((a,b)=>a+b,0);
+  // Fila de totales: SOLO meses que ambos años tienen en común (comparación justa)
+  let tot1=0, tot2=0, mesesComun=[];
+  for(let m=0;m<12;m++){
+    if(totalY1[m]>0 && totalY2[m]>0){
+      tot1+=totalY1[m];
+      tot2+=totalY2[m];
+      mesesComun.push(MESES[m+1]);
+    }
+  }
   let totDiff='—', totColor='#7a7265';
   if(tot1>0&&tot2>0){
     const pct=((tot2-tot1)/tot1*100);
     totColor=pct>=0?'#4caa6e':'#c94c4c';
     totDiff=`${pct>=0?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%`;
   }
+  const rangoTxt=mesesComun.length?`${mesesComun[0]}–${mesesComun[mesesComun.length-1]}`:'sin meses comunes';
   html+=`<tr style="border-top:2px solid #3a362e;font-weight:700">
-    <td style="color:#c9a84c">TOTAL</td>
+    <td style="color:#c9a84c">TOTAL<br><span style="font-size:10px;color:#7a7265;font-weight:400">(${rangoTxt})</span></td>
     <td class="td-money" style="color:#c9a84c">${fmtFull(tot1)}</td>
     <td class="td-money" style="color:#4caa6e">${fmtFull(tot2)}</td>
     <td class="td-num" style="color:${totColor};font-weight:700">${totDiff}</td>
