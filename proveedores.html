@@ -247,7 +247,6 @@ tr:hover td{background:rgba(201,168,76,.10);}
 .nav-tab:hover:not(.active){color:var(--text);}
 /* Vista auxiliar: ocultar dashboard completo, mostrar panel simple */
 body.rol-auxiliar #dashboard{display:none !important;}
-body.rol-auxiliar #year-bar{display:none !important;}
 body:not(.rol-auxiliar) #aux-panel{display:none !important;}
 
 /* Empty */
@@ -747,6 +746,7 @@ function aplicarRol(){
   if(rolActual==='auxiliar'){
     document.body.classList.add('rol-auxiliar');
     document.getElementById('empty-state').classList.add('hidden');
+    if(allData.length>0){ refreshYearButtons(); updateMonthSelector(); }
     renderAuxPanel();
   } else {
     document.body.classList.remove('rol-auxiliar');
@@ -1170,11 +1170,13 @@ function renderAuxPanel(){
   }
   empty.style.display='none';
   content.style.display='block';
-  // Total general
-  const total=allData.reduce((s,r)=>s+r.costoTotal,0);
+  // Datos filtrados por año/mes activos
+  const d=fd();
+  // Total general (filtrado)
+  const total=d.reduce((s,r)=>s+r.costoTotal,0);
   document.getElementById('aux-total').textContent=fmtFull(total);
-  document.getElementById('aux-reg').textContent=`${allData.length.toLocaleString()} registros`;
-  // Períodos (por año-mes)
+  document.getElementById('aux-reg').textContent=`${d.length.toLocaleString()} registros`;
+  // Períodos (siempre muestra todos los cargados, no filtrado, para referencia)
   const periodos=[...new Set(allData.map(r=>r.periodoLabel))]
     .sort((a,b)=>{
       const ra=allData.find(r=>r.periodoLabel===a), rb=allData.find(r=>r.periodoLabel===b);
@@ -1188,20 +1190,20 @@ function renderAuxPanel(){
       <span style="color:#9a9080;">${reg} reg · ${fmtFull(tot)}</span>
     </div>`;
   }).join('');
-  // Total por proveedor
+  // Total por proveedor (filtrado)
   const sups={};
-  allData.forEach(r=>{
+  d.forEach(r=>{
     const k=r.nombreProveedor||r.hoja;
     if(!sups[k])sups[k]={total:0,count:0};
     sups[k].total+=r.costoTotal; sups[k].count++;
   });
   const arr=Object.entries(sups).sort((a,b)=>b[1].total-a[1].total);
-  document.getElementById('aux-proveedores').innerHTML=arr.map(([nom,d])=>{
+  document.getElementById('aux-proveedores').innerHTML=arr.length?arr.map(([nom,dd])=>{
     return `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #2e2b25;">
       <span>${shortName(nom)}</span>
-      <span style="color:#c9a84c;font-weight:600;">${fmtFull(d.total)}</span>
+      <span style="color:#c9a84c;font-weight:600;">${fmtFull(dd.total)}</span>
     </div>`;
-  }).join('');
+  }).join(''):'<div style="color:#7a7265;font-size:13px;">Sin compras en este período</div>';
 }
 
 function getSupStats(d){
