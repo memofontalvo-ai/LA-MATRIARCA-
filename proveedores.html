@@ -772,10 +772,14 @@ function readExcel(file,periodLabel,year,month){
       const diag=[];
       for(const sheet of wb.SheetNames){
         let leidas=0, aceptadas=0;
+        let rNombre=0,rCodigo=0,rConcepto=0,rCosto=0,rError=0;
+        let primerError='';
+        let muestraCosto='';
         try{
           const data=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{defval:'',raw:true});
           leidas=data.length;
           console.log(`Hoja [${sheet}]: ${data.length} filas`);
+          let primera=true;
           for(const row of data){
             try{
           const codigo=String(row['Codigo']||row['CODIGO']||'').trim();
@@ -786,7 +790,12 @@ function readExcel(file,periodLabel,year,month){
           const valorUnd=parseFloat(row['ValorUnidad']||0)||0;
           const cantRaw=parseFloat(row['Cantidad']||0)||0;
 
-          if(!nombre||codigo==='RT_001'||pres==='CONCEPTO'||costo<=0)continue;
+          if(primera && sheet==='DISLICORES'){ muestraCosto=`costoRaw=${JSON.stringify(costoRaw)} costo=${costo} nombre="${nombre}" codigo="${codigo}" pres="${pres}"`; primera=false; }
+
+          if(!nombre){rNombre++;continue;}
+          if(codigo==='RT_001'){rCodigo++;continue;}
+          if(pres==='CONCEPTO'){rConcepto++;continue;}
+          if(costo<=0){rCosto++;continue;}
 
           let rowYear=year, rowMonth=month;
           const fechaRaw=row['FechaDocumento']||row['Fecha']||row['FECHA']||row['fecha']||row['FechaCompra']||row['Fecha Compra']||null;
@@ -849,14 +858,20 @@ function readExcel(file,periodLabel,year,month){
           allData.push(rec);
           rows++;
           aceptadas++;
-          }catch(rowErr){ console.warn(`Fila ignorada en ${sheet}:`, rowErr); }
+          }catch(rowErr){ rError++; if(!primerError)primerError=rowErr.message; console.warn(`Fila ignorada en ${sheet}:`, rowErr); }
           } // end for row
-        }catch(sheetErr){ console.error(`Error en hoja ${sheet}:`, sheetErr); diag.push(`${sheet}: ERROR ${sheetErr.message}`); }
-        diag.push(`${sheet}: leídas ${leidas}, aceptadas ${aceptadas}`);
+        }catch(sheetErr){ console.error(`Error en hoja ${sheet}:`, sheetErr); diag.push(`${sheet}: ERROR HOJA ${sheetErr.message}`); }
+        let linea=`${sheet}: leídas ${leidas}, aceptadas ${aceptadas}`;
+        if(aceptadas<leidas){
+          linea+=` [rechazos: sinNombre=${rNombre} codRT=${rCodigo} concepto=${rConcepto} costo0=${rCosto} error=${rError}]`;
+        }
+        if(primerError) linea+=` ERR:"${primerError}"`;
+        if(muestraCosto) linea+=`\n  → ${muestraCosto}`;
+        diag.push(linea);
       } // end for sheet
 
       // Mostrar diagnóstico en pantalla
-      alert('DIAGNÓSTICO DE LECTURA:\n\n'+diag.join('\n')+`\n\nTOTAL: ${rows}`);
+      alert('DIAGNÓSTICO DE LECTURA:\n\n'+diag.join('\n\n')+`\n\nTOTAL: ${rows}`);
 
       const fileMeta={id:fileId,name:file.name,periodoLabel:periodLabel,year,month,rows};
       filesLoaded.push(fileMeta);
