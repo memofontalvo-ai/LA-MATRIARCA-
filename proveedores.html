@@ -769,9 +769,12 @@ function readExcel(file,periodLabel,year,month){
       const wb=XLSX.read(e.target.result,{type:'array', cellFormula:false, cellNF:false});
       const fileId=uid();let rows=0;
       const newRows=[];
+      const diag=[];
       for(const sheet of wb.SheetNames){
+        let leidas=0, aceptadas=0;
         try{
           const data=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{defval:'',raw:true});
+          leidas=data.length;
           console.log(`Hoja [${sheet}]: ${data.length} filas`);
           for(const row of data){
             try{
@@ -845,10 +848,15 @@ function readExcel(file,periodLabel,year,month){
           newRows.push(rec);
           allData.push(rec);
           rows++;
+          aceptadas++;
           }catch(rowErr){ console.warn(`Fila ignorada en ${sheet}:`, rowErr); }
           } // end for row
-        }catch(sheetErr){ console.error(`Error en hoja ${sheet}:`, sheetErr); }
+        }catch(sheetErr){ console.error(`Error en hoja ${sheet}:`, sheetErr); diag.push(`${sheet}: ERROR ${sheetErr.message}`); }
+        diag.push(`${sheet}: leídas ${leidas}, aceptadas ${aceptadas}`);
       } // end for sheet
+
+      // Mostrar diagnóstico en pantalla
+      alert('DIAGNÓSTICO DE LECTURA:\n\n'+diag.join('\n')+`\n\nTOTAL: ${rows}`);
 
       const fileMeta={id:fileId,name:file.name,periodoLabel:periodLabel,year,month,rows};
       filesLoaded.push(fileMeta);
