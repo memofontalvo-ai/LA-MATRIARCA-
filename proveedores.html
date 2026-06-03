@@ -756,7 +756,7 @@ function readExcel(file,periodLabel,year,month){
   const reader=new FileReader();
   reader.onload=async e=>{
     try{
-      const wb=XLSX.read(e.target.result,{type:'array'});
+      const wb=XLSX.read(e.target.result,{type:'array', cellFormula:false, cellNF:false});
       const fileId=uid();let rows=0;
       const newRows=[];
       wb.SheetNames.forEach(sheet=>{
@@ -765,7 +765,8 @@ function readExcel(file,periodLabel,year,month){
           const codigo=String(row['Codigo']||row['CODIGO']||'').trim();
           const pres=String(row['Presentacion']||row['PRESENTACION']||'').trim().toUpperCase();
           const nombre=String(row['Nombre']||row['NOMBRE']||'').trim();
-          const costo=parseFloat(row['CostoTotal']||row['COSTOTOTAL']||row['Costo Total']||0)||0;
+          const costoRaw=row['CostoTotal']||row['COSTOTOTAL']||row['Costo Total']||0;
+          const costo=typeof costoRaw==='number'?costoRaw:(parseFloat(String(costoRaw).replace(/[^0-9.-]/g,''))||0);
           const valorUnd=parseFloat(row['ValorUnidad']||0)||0;
           const cantRaw=parseFloat(row['Cantidad']||0)||0;
 
