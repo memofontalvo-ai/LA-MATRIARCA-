@@ -759,10 +759,12 @@ function readExcel(file,periodLabel,year,month){
       const wb=XLSX.read(e.target.result,{type:'array', cellFormula:false, cellNF:false});
       const fileId=uid();let rows=0;
       const newRows=[];
-      wb.SheetNames.forEach(sheet=>{
-        const data=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{defval:''});
-        data.forEach(row=>{
-          try{
+      for(const sheet of wb.SheetNames){
+        try{
+          const data=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{defval:'',raw:true});
+          console.log(`Hoja [${sheet}]: ${data.length} filas`);
+          for(const row of data){
+            try{
           const codigo=String(row['Codigo']||row['CODIGO']||'').trim();
           const pres=String(row['Presentacion']||row['PRESENTACION']||'').trim().toUpperCase();
           const nombre=String(row['Nombre']||row['NOMBRE']||'').trim();
@@ -771,7 +773,7 @@ function readExcel(file,periodLabel,year,month){
           const valorUnd=parseFloat(row['ValorUnidad']||0)||0;
           const cantRaw=parseFloat(row['Cantidad']||0)||0;
 
-          if(!nombre||codigo==='RT_001'||pres==='CONCEPTO'||costo<=0)return;
+          if(!nombre||codigo==='RT_001'||pres==='CONCEPTO'||costo<=0)continue;
 
           let rowYear=year, rowMonth=month;
           const fechaRaw=row['FechaDocumento']||row['Fecha']||row['FECHA']||row['fecha']||row['FechaCompra']||row['Fecha Compra']||null;
@@ -833,9 +835,10 @@ function readExcel(file,periodLabel,year,month){
           newRows.push(rec);
           allData.push(rec);
           rows++;
-          }catch(rowErr){ console.warn('Fila ignorada:', rowErr); }
-        });
-      });
+          }catch(rowErr){ console.warn(`Fila ignorada en ${sheet}:`, rowErr); }
+          } // end for row
+        }catch(sheetErr){ console.error(`Error en hoja ${sheet}:`, sheetErr); }
+      } // end for sheet
 
       const fileMeta={id:fileId,name:file.name,periodoLabel:periodLabel,year,month,rows};
       filesLoaded.push(fileMeta);
