@@ -748,6 +748,15 @@ document.getElementById('modal-confirm').addEventListener('click',()=>{
   const month=parseInt(document.getElementById('sel-month').value);
   const year=parseInt(document.getElementById('sel-year').value);
   const label=month===0?`Año ${year}`:`${MESES[month]} ${year}`;
+  // Validar duplicado: mismo nombre + mismo año + mismo mes
+  const fname=pendingFile?pendingFile.name:'';
+  const yaExiste=filesLoaded.some(f=>f.name===fname && f.year===year && (f.month||0)===month);
+  if(yaExiste){
+    alert(`⚠️ Este archivo ya está guardado:\n\n"${fname}" — ${label}\n\nSi quieres volver a cargarlo, primero elimínalo con la ✕ y vuelve a subirlo.`);
+    document.getElementById('modal').classList.add('hidden');
+    pendingFile=null;
+    return;
+  }
   document.getElementById('modal').classList.add('hidden');
   readExcel(pendingFile,label,year,month);
   pendingFile=null;
@@ -831,7 +840,7 @@ function readExcel(file,periodLabel,year,month){
             costoTotal:costo,
             year:rowYear, month:rowMonth,
             periodoLabel:rowLabel,
-            fileId,hoja:sheet,
+            fileId,hoja:sheet,fileName:file.name,
           };
           newRows.push(rec);
           allData.push(rec);
@@ -893,18 +902,35 @@ function readExcel(file,periodLabel,year,month){
 
 async function limpiarTodo(){
   if(!confirm('¿Borrar TODOS los datos de proveedores?')) return;
+  // Banner permanente de progreso
+  let banner = document.getElementById('save-banner');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'save-banner';
+    banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#c94c4c;color:#fff;text-align:center;padding:14px;font-weight:700;font-size:15px;z-index:999;';
+    document.body.appendChild(banner);
+  }
+  banner.style.background='#c94c4c'; banner.style.color='#fff';
+  banner.style.display='block';
+  banner.textContent='🗑️ Limpiando... NO CIERRES LA APP';
   try{
-    showToast('🗑️ Limpiando base de datos...');
-    // Borrar todos los archivos
+    // Borrar archivos
     const filesSnap = await db.collection(COL_FILES).get();
     for(const doc of filesSnap.docs) await doc.ref.delete();
-    // Borrar todos los registros en lotes
-    const dataSnap = await db.collection(COL_DATA).get();
-    const BATCH = 400;
-    for(let i=0; i<dataSnap.docs.length; i+=BATCH){
+    // Borrar registros EN BUCLE hasta que Firebase quede vacío
+    let totalBorrados = 0;
+    let vuelta = 0;
+    while(true){
+      vuelta++;
+      const snap = await db.collection(COL_DATA).limit(400).get();
+      if(snap.empty) break;
       const batch = db.batch();
-      dataSnap.docs.slice(i,i+BATCH).forEach(d=>batch.delete(d.ref));
+      snap.docs.forEach(d=>batch.delete(d.ref));
       await batch.commit();
+      totalBorrados += snap.docs.length;
+      banner.textContent = `🗑️ Borrados ${totalBorrados}... NO CIERRES LA APP`;
+      await new Promise(r=>setTimeout(r,200));
+      if(vuelta>50) break; // seguridad
     }
     allData=[]; filesLoaded=[];
     renderFilesLoaded(); refreshYearButtons(); updateMonthSelector();
@@ -912,8 +938,13 @@ async function limpiarTodo(){
     document.getElementById('empty-state').classList.remove('hidden');
     const b=document.getElementById('btn-limpiar-todo');
     if(b) b.style.display='none';
-    showToast('✅ Base de datos limpiada');
-  }catch(e){ showToast('⚠️ Error: '+e.message); }
+    banner.style.background='#4caa6e';
+    banner.textContent=`✅ ${totalBorrados} registros borrados. Ahora sube el Excel de nuevo.`;
+    setTimeout(()=>{ banner.style.display='none'; }, 6000);
+  }catch(e){
+    banner.textContent='⚠️ Error: '+e.message;
+    setTimeout(()=>{ banner.style.display='none'; }, 6000);
+  }
 }
 
 async function removeFile(fileId){
@@ -1344,7 +1375,7 @@ async function loadFromDB() {
       const fileMap = {};
       allData.forEach(r => {
         if(!fileMap[r.fileId]){
-          fileMap[r.fileId] = {id:r.fileId, name:'Archivo cargado', periodoLabel:r.periodoLabel, year:r.year, month:r.month||0, rows:0};
+          fileMap[r.fileId] = {id:r.fileId, name:r.fileName||'Archivo cargado', periodoLabel:r.periodoLabel, year:r.year, month:r.month||0, rows:0};
         }
         fileMap[r.fileId].rows++;
       });
