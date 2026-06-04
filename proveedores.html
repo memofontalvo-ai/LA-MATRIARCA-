@@ -1517,12 +1517,14 @@ function renderComparativoAnual(){
   let html='';
   for(let m=0;m<12;m++){
     const v1=totalY1[m], v2=totalY2[m];
-    let diffTxt='—', diffColor='#7a7265';
+    let diffTxt='—', diffColor='#7a7265', diffPesos='';
     if(v1>0&&v2>0){
       const pct=((v2-v1)/v1*100);
       const subio=pct>=0;
+      const dif=v2-v1;
       diffColor=subio?'#4caa6e':'#c94c4c';
       diffTxt=`${subio?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%`;
+      diffPesos=`<br><span style="font-size:11px;font-weight:600;color:${diffColor}">${dif>=0?'+':'−'}${fmtFull(Math.abs(dif))}</span>`;
     } else if(v2>0&&v1===0){
       diffColor='#4c8ec9'; diffTxt='nuevo';
     } else if(v1>0&&v2===0){
@@ -1534,7 +1536,7 @@ function renderComparativoAnual(){
       <td>${MESES[m+1]}</td>
       <td class="td-money">${v1>0?fmtFull(v1):'—'}</td>
       <td class="td-money">${v2>0?fmtFull(v2):'—'}</td>
-      <td class="td-num" style="color:${diffColor};font-weight:700">${diffTxt}</td>
+      <td class="td-num" style="color:${diffColor};font-weight:700">${diffTxt}${diffPesos}</td>
     </tr>`;
   }
   // Fila de totales: SOLO meses que ambos años tienen en común (comparación justa)
@@ -1546,18 +1548,20 @@ function renderComparativoAnual(){
       mesesComun.push(MESES[m+1]);
     }
   }
-  let totDiff='—', totColor='#7a7265';
+  let totDiff='—', totColor='#7a7265', totPesos='';
   if(tot1>0&&tot2>0){
     const pct=((tot2-tot1)/tot1*100);
+    const dif=tot2-tot1;
     totColor=pct>=0?'#4caa6e':'#c94c4c';
     totDiff=`${pct>=0?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%`;
+    totPesos=`<br><span style="font-size:12px;font-weight:700;color:${totColor}">${dif>=0?'+':'−'}${fmtFull(Math.abs(dif))}</span>`;
   }
   const rangoTxt=mesesComun.length?`${mesesComun[0]}–${mesesComun[mesesComun.length-1]}`:'sin meses comunes';
   html+=`<tr style="border-top:2px solid #3a362e;font-weight:700">
     <td style="color:#c9a84c">TOTAL<br><span style="font-size:10px;color:#7a7265;font-weight:400">(${rangoTxt})</span></td>
     <td class="td-money" style="color:#c9a84c">${fmtFull(tot1)}</td>
     <td class="td-money" style="color:#4caa6e">${fmtFull(tot2)}</td>
-    <td class="td-num" style="color:${totColor};font-weight:700">${totDiff}</td>
+    <td class="td-num" style="color:${totColor};font-weight:700">${totDiff}${totPesos}</td>
   </tr>`;
   document.getElementById('comp-anual-body').innerHTML=html;
 }
