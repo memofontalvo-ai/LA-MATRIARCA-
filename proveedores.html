@@ -414,10 +414,10 @@ canvas{display:block;max-width:100%!important;}
     <div class="upload-section">
       <div class="section-title">📁 Cargar Archivos</div>
       <div class="upload-area" id="drop-zone">
-        <input type="file" id="file-input" accept=".xlsx,.xls" multiple/>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.json" multiple/>
         <div class="upload-icon">📊</div>
         <h3>Toca aquí o arrastra tu archivo Excel</h3>
-        <p>Múltiples hojas por proveedor (.xlsx)</p>
+        <p>Excel (.xlsx) o archivo pre-procesado (.json)</p>
         <div class="upload-hint">Carga por mes o por año — puedes subir varios</div>
       </div>
 
@@ -974,7 +974,12 @@ document.getElementById('drop-zone').addEventListener('drop',e=>{e.preventDefaul
 document.getElementById('file-input').addEventListener('change',e=>{[...e.target.files].forEach(f=>processFile(f));e.target.value='';});
 
 function processFile(file){
-  if(!file.name.match(/\.(xlsx|xls)$/i)){showToast('Solo se aceptan .xlsx o .xls');return;}
+  // Archivo pre-procesado (JSON liviano) → carga directa sin parsear Excel
+  if(file.name.match(/\.json$/i)){
+    processJSON(file);
+    return;
+  }
+  if(!file.name.match(/\.(xlsx|xls)$/i)){showToast('Solo se aceptan .xlsx, .xls o .json');return;}
   pendingFile=file;
   document.getElementById('modal-fname').textContent=file.name;
   const ym=file.name.match(/20\d{2}/);
@@ -982,6 +987,81 @@ function processFile(file){
   const mm=file.name.match(/_(0?[1-9]|1[0-2])_/i);
   document.getElementById('sel-month').value=mm?parseInt(mm[1]):0;
   document.getElementById('modal').classList.remove('hidden');
+}
+
+// ── Carga de JSON pre-procesado (rápida, a prueba de memoria en iPhone) ──
+function processJSON(file){
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    let arr;
+    try{ arr=JSON.parse(e.target.result); }
+    catch(err){ showToast('⚠️ JSON inválido: '+err.message); return; }
+    if(!Array.isArray(arr)||!arr.length){ showToast('⚠️ El JSON está vacío'); return; }
+
+    const fileId=uid();
+    const newRows=[];
+    arr.forEach(r=>{
+      // Asegurar clasificación (si el JSON no la trae)
+      if(!r.catGrupo){
+        const c=clasificar(r.codigo);
+        r.catGrupo=c.grupo;r.catSub=c.sub;r.catLinea=c.linea;
+        r.catGrupoNom=c.grupoNom;r.catSubNom=c.subNom;r.catLineaNom=c.lineaNom;
+      }
+      r.fileId=fileId;
+      if(!r.hoja) r.hoja='COMPRAS';
+      if(!r.fileName) r.fileName=file.name;
+      newRows.push(r);
+      allData.push(r);
+    });
+
+    const years=[...new Set(newRows.map(r=>r.year))];
+    const label=years.length===1?`Año ${years[0]}`:`${years.length} años`;
+    const yearMeta=years.length===1?years[0]:0;
+    const fileMeta={id:fileId,name:file.name,periodoLabel:label,year:yearMeta,month:0,rows:newRows.length};
+    filesLoaded.push(fileMeta);
+    renderFilesLoaded();refreshYearButtons();updateMonthSelector();renderDashboard();
+    showToast(`✓ ${file.name} — ${newRows.length.toLocaleString()} registros`);
+
+    // Guardar permanentemente en Firebase
+    let banner=document.getElementById('save-banner');
+    if(!banner){banner=document.createElement('div');banner.id='save-banner';banner.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#c9a84c;color:#0f0e0c;text-align:center;padding:14px;font-weight:700;font-size:15px;z-index:999;';document.body.appendChild(banner);}
+    banner.style.background='#c9a84c';banner.style.color='#0f0e0c';banner.style.display='block';
+    banner.textContent='💾 Guardando en Firebase...';
+    window._guardando=true;
+    try{
+      await db.collection(COL_FILES).doc(fileId).set(fileMeta);
+      const BATCH_SIZE=450, totalLotes=Math.ceil(newRows.length/BATCH_SIZE);
+      let guardados=0;
+      for(let i=0;i<newRows.length;i+=BATCH_SIZE){
+        const lote=Math.floor(i/BATCH_SIZE)+1;
+        const slice=newRows.slice(i,i+BATCH_SIZE);
+        let intento=0;
+        while(true){
+          try{
+            const batch=db.batch();
+            slice.forEach(r=>batch.set(db.collection(COL_DATA).doc(uid()),r));
+            await batch.commit();break;
+          }catch(le){intento++;if(intento>=3)throw le;banner.style.background='#c97a4c';banner.textContent=`⚠️ Reintentando lote ${lote} (${intento}/3)...`;await new Promise(r=>setTimeout(r,1500));}
+        }
+        guardados+=slice.length;
+        const pct=Math.round(guardados/newRows.length*100);
+        banner.style.background='#c9a84c';
+        banner.textContent=`💾 Guardando ${guardados.toLocaleString()}/${newRows.length.toLocaleString()} (${pct}%) · lote ${lote}/${totalLotes} — NO CIERRES`;
+      }
+      await db.collection(COL_FILES).doc(fileId).set({...fileMeta,completo:true,guardados});
+      banner.style.background='#4caa6e';banner.style.color='#fff';
+      banner.textContent=`✅ ${newRows.length.toLocaleString()} registros guardados permanentemente. Ya puedes cerrar.`;
+      setTimeout(()=>{banner.style.display='none';},6000);
+      window._guardando=false;
+    }catch(fbErr){
+      banner.style.background='#c94c4c';banner.style.color='#fff';
+      banner.textContent='⚠️ Se cortó el guardado. Vuelve a subir el MISMO archivo para completar lo que falta.';
+      setTimeout(()=>{banner.style.display='none';},8000);
+      console.error('Firebase save error:',fbErr);
+      window._guardando=false;
+    }
+  };
+  reader.readAsText(file);
 }
 document.getElementById('modal-confirm').addEventListener('click',()=>{
   const month=parseInt(document.getElementById('sel-month').value);
