@@ -1265,9 +1265,22 @@ async function limpiarTodo(){
   }
   banner.style.background='#c94c4c'; banner.style.color='#fff';
   banner.style.display='block';
-  banner.textContent='🗑️ Limpiando... NO CIERRES LA APP';
+  banner.textContent='🗑️ Contando registros...';
   window._guardando=true; // proteger contra cierre accidental
   try{
+    // 0) Contar cuántos hay para mostrar porcentaje real
+    let totalAContar = 0;
+    try{
+      const agg = await db.collection(COL_DATA).count().get();
+      totalAContar = agg.data().count;
+    }catch(ctErr){
+      // Si count() no está disponible, usar lo que tenemos cargado como referencia
+      totalAContar = allData.length || 0;
+    }
+    banner.textContent = totalAContar>0
+      ? `🗑️ Borrando 0 de ${totalAContar.toLocaleString()} (0%)... NO CIERRES`
+      : '🗑️ Limpiando... NO CIERRES';
+
     // 1) Borrar metadatos de archivos (en lotes)
     let fSnap;
     do {
@@ -1310,7 +1323,12 @@ async function limpiarTodo(){
       }
       totalBorrados += snap.docs.length;
       banner.style.background='#c94c4c';
-      banner.textContent = `🗑️ Borrados ${totalBorrados.toLocaleString()}... NO CIERRES`;
+      if(totalAContar>0){
+        const pct=Math.min(100,Math.round(totalBorrados/totalAContar*100));
+        banner.textContent = `🗑️ Borrando ${totalBorrados.toLocaleString()} de ${totalAContar.toLocaleString()} (${pct}%)... NO CIERRES`;
+      } else {
+        banner.textContent = `🗑️ Borrados ${totalBorrados.toLocaleString()}... NO CIERRES`;
+      }
     }
 
     allData=[]; filesLoaded=[];
