@@ -1119,33 +1119,54 @@ function readExcel(file,periodLabel,year,month){
       }
       banner.textContent = '💾 Guardando en Firebase... espera';
       banner.style.display = 'block';
+      window._guardando = true; // proteger contra cierre accidental
 
       try {
         await db.collection(COL_FILES).doc(fileId).set(fileMeta);
 
-        const BATCH_SIZE = 200;
+        // Lotes grandes (Firestore admite hasta 500 ops por batch).
+        // Sin pausas: cada commit ya espera confirmación del servidor.
+        const BATCH_SIZE = 450;
         const totalLotes = Math.ceil(newRows.length / BATCH_SIZE);
+        let guardados = 0;
         for(let i = 0; i < newRows.length; i += BATCH_SIZE) {
           const lote = Math.floor(i/BATCH_SIZE) + 1;
-          banner.textContent = `💾 Guardando lote ${lote}/${totalLotes}... NO CIERRES LA APP`;
-          const batch = db.batch();
-          newRows.slice(i, i + BATCH_SIZE).forEach(r => {
-            batch.set(db.collection(COL_DATA).doc(uid()), r);
-          });
-          await batch.commit();
-          // Pausa de 300ms entre lotes para evitar timeout
-          await new Promise(resolve => setTimeout(resolve, 300));
+          const slice = newRows.slice(i, i + BATCH_SIZE);
+          // Reintento por lote: si la red falla, vuelve a intentar hasta 3 veces
+          let intento = 0;
+          while(true){
+            try{
+              const batch = db.batch();
+              slice.forEach(r => batch.set(db.collection(COL_DATA).doc(uid()), r));
+              await batch.commit();
+              break;
+            }catch(loteErr){
+              intento++;
+              if(intento>=3) throw loteErr;
+              banner.style.background='#c97a4c';
+              banner.textContent = `⚠️ Reintentando lote ${lote} (${intento}/3)...`;
+              await new Promise(r=>setTimeout(r,1500));
+            }
+          }
+          guardados += slice.length;
+          const pct = Math.round(guardados/newRows.length*100);
+          banner.style.background='#c9a84c';
+          banner.textContent = `💾 Guardando ${guardados.toLocaleString()}/${newRows.length.toLocaleString()} (${pct}%) · lote ${lote}/${totalLotes} — NO CIERRES`;
         }
+        // Confirmar que el archivo quedó marcado como completo
+        await db.collection(COL_FILES).doc(fileId).set({...fileMeta, completo:true, guardados});
         banner.style.background = '#4caa6e';
         banner.style.color = '#fff';
-        banner.textContent = `✅ ${rows.toLocaleString()} registros guardados. Ya puedes cerrar.`;
-        setTimeout(() => { banner.style.display = 'none'; }, 5000);
+        banner.textContent = `✅ ${rows.toLocaleString()} registros guardados permanentemente. Ya puedes cerrar.`;
+        setTimeout(() => { banner.style.display = 'none'; }, 6000);
+        window._guardando = false;
       } catch(fbErr) {
         banner.style.background = '#c94c4c';
         banner.style.color = '#fff';
-        banner.textContent = '⚠️ Error: ' + fbErr.message;
-        setTimeout(() => { banner.style.display = 'none'; }, 5000);
+        banner.textContent = '⚠️ Se cortó el guardado. Vuelve a subir el MISMO archivo para completar lo que falta.';
+        setTimeout(() => { banner.style.display = 'none'; }, 8000);
         console.error('Firebase save error:', fbErr);
+        window._guardando = false;
       }
 
     }catch(err){showToast('Error: '+err.message);}
@@ -1988,6 +2009,15 @@ function initFirebase() {
 }
 
 window.addEventListener('load', initFirebase);
+
+// Advertir si se intenta cerrar/recargar mientras se guarda en Firebase
+window.addEventListener('beforeunload', function(e){
+  if(window._guardando){
+    e.preventDefault();
+    e.returnValue = 'El guardado está en curso. Si sales ahora, los datos quedarán incompletos.';
+    return e.returnValue;
+  }
+});
 
 </script>
 </body>
