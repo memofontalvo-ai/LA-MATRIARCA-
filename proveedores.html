@@ -1282,7 +1282,7 @@ async function limpiarTodo(){
 
     // PRUEBA: leer 1 documento y borrarlo, con timeout de 10s, para detectar bloqueos
     banner.textContent = '🗑️ Paso 2/3: prueba de borrado... NO CIERRES';
-    const test = await conTimeout(db.collection(COL_DATA).limit(1).get({source:'server'}), 10000, 'lectura de prueba');
+    const test = await conTimeout(db.collection(COL_DATA).limit(1).get(), 30000, 'lectura de prueba');
     if(!test.empty){
       try{
         await conTimeout(test.docs[0].ref.delete(), 10000, 'borrado de prueba');
@@ -1318,21 +1318,21 @@ async function limpiarTodo(){
       let intentoLec=0;
       while(true){
         try{
-          snap = await conTimeout(db.collection(COL_DATA).limit(300).get({source:'server'}), 15000, 'lectura de lote');
+          snap = await conTimeout(db.collection(COL_DATA).limit(100).get(), 30000, 'lectura de lote');
           break;
         }catch(lecErr){
           intentoLec++;
-          if(intentoLec>=4) throw lecErr;
+          if(intentoLec>=8) throw lecErr;
           banner.style.background='#c97a4c';
-          banner.textContent=`⚠️ Reintentando lectura (${intentoLec}/4)...`;
-          await new Promise(r=>setTimeout(r,1500));
+          banner.textContent=`⚠️ Conexión lenta, reintentando lectura (${intentoLec}/8)...`;
+          await new Promise(r=>setTimeout(r,2000*intentoLec));
         }
       }
       if(snap.empty){
         vacios++;
-        banner.textContent=`🗑️ Verificando que no quede nada (${vacios}/3)...`;
-        if(vacios>=3) break; // tres lecturas vacías seguidas desde el servidor = realmente vacío
-        await new Promise(r=>setTimeout(r,1200));
+        banner.textContent=`🗑️ Verificando que no quede nada (${vacios}/2)...`;
+        if(vacios>=2) break;
+        await new Promise(r=>setTimeout(r,1500));
         continue;
       }
       vacios=0;
@@ -1342,14 +1342,14 @@ async function limpiarTodo(){
         try{
           const batch = db.batch();
           snap.docs.forEach(d=>batch.delete(d.ref));
-          await conTimeout(batch.commit(), 15000, 'commit de borrado');
+          await conTimeout(batch.commit(), 30000, 'commit de borrado');
           break;
         }catch(delErr){
           intento++;
-          if(intento>=4) throw delErr;
+          if(intento>=8) throw delErr;
           banner.style.background='#c97a4c';
-          banner.textContent=`⚠️ Reintentando borrado (${intento}/4)...`;
-          await new Promise(r=>setTimeout(r,1500));
+          banner.textContent=`⚠️ Conexión lenta, reintentando borrado (${intento}/8)...`;
+          await new Promise(r=>setTimeout(r,2000*intento));
         }
       }
       totalBorrados += snap.docs.length;
