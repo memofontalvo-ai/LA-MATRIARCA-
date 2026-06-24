@@ -461,6 +461,7 @@ canvas{display:block;max-width:100%!important;}
 
       <div class="nav-tabs">
         <button class="nav-tab active" onclick="setTab('resumen')">Resumen</button>
+        <button class="nav-tab" onclick="setTab('categorias')">Categorías</button>
         <button class="nav-tab" onclick="setTab('proveedores')">Proveedores</button>
         <button class="nav-tab" onclick="setTab('productos')">Productos</button>
         <button class="nav-tab" onclick="setTab('comparativo')">Comparativo</button>
@@ -485,6 +486,44 @@ canvas{display:block;max-width:100%!important;}
             <div class="chart-title">Top 10 Productos · Mayor Gasto</div>
             <div class="chart-subtitle">Por costo total acumulado en el período</div>
             <div class="chart-wrap" style="height:260px"><canvas id="chart-top10" style="max-height:260px"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORÍAS -->
+      <div id="tab-categorias" class="hidden">
+        <!-- Breadcrumb -->
+        <div id="cat-breadcrumb" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;"></div>
+        <!-- Banner resumen del nivel actual -->
+        <div id="cat-banner" style="background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div id="cat-banner-icon" style="font-size:28px;">📦</div>
+          <div style="flex:1;min-width:140px;">
+            <div id="cat-banner-title" style="font-family:'Playfair Display',serif;font-size:18px;color:var(--cream);font-weight:700;"></div>
+            <div id="cat-banner-sub" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+          </div>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;">
+            <div style="text-align:right;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Gasto</div><div id="cat-banner-total" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--gold);line-height:1.1;"></div></div>
+            <div style="text-align:right;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">% Total</div><div id="cat-banner-pct" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cream);line-height:1.1;"></div></div>
+            <div style="text-align:right;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Registros</div><div id="cat-banner-reg" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cream);line-height:1.1;"></div></div>
+          </div>
+        </div>
+        <!-- Grid de tarjetas (grupos/sub/líneas) -->
+        <div id="cat-grid" class="supplier-grid"></div>
+        <!-- Gráfico de distribución del nivel -->
+        <div class="chart-card" id="cat-chart-card" style="margin-bottom:18px;">
+          <div class="chart-title" id="cat-chart-title">Distribución del gasto</div>
+          <div class="chart-subtitle" id="cat-chart-sub"></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="chart-cat" style="max-height:280px"></canvas></div>
+        </div>
+        <!-- Tabla de productos (solo en nivel línea) -->
+        <div class="chart-card" id="cat-prod-card" style="display:none;">
+          <div class="chart-title">Productos de esta línea</div>
+          <div class="chart-subtitle" id="cat-prod-sub"></div>
+          <div class="table-wrap" style="margin-top:10px;max-height:420px;overflow-y:auto">
+            <table>
+              <thead><tr><th>#</th><th>Producto</th><th>Proveedor</th><th class="td-num">Cantidad</th><th class="td-num">Gasto $</th><th class="td-num">%</th></tr></thead>
+              <tbody id="cat-prod-body"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -701,6 +740,78 @@ canvas{display:block;max-width:100%!important;}
 const COLORS=['#c9a84c','#4caa6e','#4c8ec9','#c94c4c','#8e6ec9','#c97a4c','#6ec9b8'];
 const MESES=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
+// ════════════════════════════════════════
+// CLASIFICACIÓN DE PRODUCTOS — La Matriarca
+// El código del Excel trae el prefijo (ej: AL0601-007)
+//   Grupo  = 2 letras           (AL)
+//   Subgrupo = 2 letras + 2 díg  (AL06)
+//   Línea  = 2 letras + 4 díg    (AL0601)
+// ════════════════════════════════════════
+const CAT_GRUPOS={
+  AL:{nombre:'Alimentos',     icon:'🍽️', color:'#c9a84c'},
+  BE:{nombre:'Bebidas',       icon:'🥤', color:'#4c8ec9'},
+  EA:{nombre:'Aseo y Desechables', icon:'🧴', color:'#4caa6e'},
+  LC:{nombre:'Loza y Cristalería', icon:'🍷', color:'#8e6ec9'},
+  SC:{nombre:'Sin Clasificar',icon:'❓', color:'#7a7265'},
+};
+const CAT_SUB={
+  // ALIMENTOS
+  AL01:'Proteínas', AL02:'Víveres y Abarrotes', AL03:'Frutas y Verduras',
+  AL04:'Congelados', AL05:'Lácteos', AL06:'Postres',
+  // BEBIDAS
+  BE01:'Bebidas No Alcohólicas', BE02:'Bebidas Alcohólicas',
+  // ASEO
+  EA01:'Aseo', EA02:'Desechables', EA03:'Papelería',
+  // LOZA
+  LC01:'Copa', LC02:'Menaje', LC03:'Vasos',
+};
+const CAT_LINEA={
+  // AL01 Proteínas
+  AL0101:'Carnes Certificadas', AL0102:'Carne de Res Importada',
+  AL0103:'Carne de Res Nacional', AL0104:'Carne de Cerdo',
+  AL0105:'Pescados', AL0106:'Mariscos', AL0107:'Pollo', AL0108:'Embutidos',
+  // AL02 Víveres
+  AL0201:'Abarrotes', AL0202:'Harinas', AL0203:'Salsas',
+  // AL03 Frutas y Verduras
+  AL0301:'Verduras', AL0302:'Frutas', AL0303:'Pulpas / Jugo',
+  // AL04 Congelados
+  AL0401:'Congelados',
+  // AL05 Lácteos
+  AL0501:'Leche', AL0502:'Queso', AL0503:'Helados',
+  // AL06 Postres
+  AL0601:'Postres',
+  // BE01 No Alcohólicas
+  BE0101:'Agua', BE0102:'Gaseosas y Sodas', BE0103:'Bebidas Energizantes',
+  BE0104:'Cerveza sin Alcohol',
+  // BE02 Alcohólicas
+  BE0201:'Cervezas', BE0202:'Aguardientes', BE0203:'Vinos', BE0204:'Rones',
+  BE0205:'Whisky', BE0206:'Vodka', BE0207:'Ginebras y Cremas', BE0208:'Tequila',
+  BE0209:'Aperitivo', BE0210:'Digestivos',
+  // EA
+  EA01:'Aseo', EA02:'Desechables', EA03:'Papelería',
+  // LC
+  LC01:'Copa', LC02:'Menaje', LC03:'Vasos',
+};
+
+// Extrae grupo/subgrupo/línea desde el código del Excel
+function clasificar(codigo){
+  const cod=String(codigo||'').trim().toUpperCase();
+  const m=cod.match(/^([A-Z]{2})(\d{2})?(\d{2})?/);
+  if(!m){
+    return {grupo:'SC',sub:'SC00',linea:'SC0000',grupoNom:'Sin Clasificar',subNom:'Sin Clasificar',lineaNom:'Sin Clasificar'};
+  }
+  let g=m[1];
+  if(!CAT_GRUPOS[g]) g='SC'; // grupos no reconocidos (RC, etc.) → Sin Clasificar
+  const sub = m[2]?g+m[2]:g+'00';
+  const linea = (m[2]&&m[3])?g+m[2]+m[3]:sub+'00';
+  const grupoNom = CAT_GRUPOS[g]?CAT_GRUPOS[g].nombre:'Sin Clasificar';
+  const subNom = CAT_SUB[sub] || (g==='SC'?'Sin Clasificar':grupoNom);
+  const lineaNom = CAT_LINEA[linea] || subNom;
+  return {grupo:g, sub, linea, grupoNom, subNom, lineaNom};
+}
+function catColor(g){ return CAT_GRUPOS[g]?CAT_GRUPOS[g].color:'#7a7265'; }
+function catIcon(g){ return CAT_GRUPOS[g]?CAT_GRUPOS[g].icon:'❓'; }
+
 // db se inicializa en window.onload después de que Firebase cargue
 let db, COL_FILES='proveedores_files', COL_DATA='proveedores_data';
 
@@ -708,7 +819,7 @@ let db, COL_FILES='proveedores_files', COL_DATA='proveedores_data';
 let allData=[],filesLoaded=[],pendingFile=null;
 let activeYear='ALL',activeMonth=0,detailPage=1;
 const PAGE_SIZE=50;
-let cGasto,cFreq,cTop10,cSupDet,cCompTotal,cCompProv,cProdBar,cCompMensual;
+let cGasto,cFreq,cTop10,cSupDet,cCompTotal,cCompProv,cProdBar,cCompMensual,cCat;
 
 // ── Control de acceso por rol ────────
 let rolActual=null; // 'auxiliar' | 'admin'
@@ -977,6 +1088,10 @@ function readExcel(file,periodLabel,year,month){
                 periodoLabel:rowLabel,
                 fileId, hoja:sheet, fileName:file.name,
               };
+              // ── Clasificación por categoría (desde el código) ──
+              const cls=clasificar(codigo);
+              rec.catGrupo=cls.grupo; rec.catSub=cls.sub; rec.catLinea=cls.linea;
+              rec.catGrupoNom=cls.grupoNom; rec.catSubNom=cls.subNom; rec.catLineaNom=cls.lineaNom;
               newRows.push(rec);
               allData.push(rec);
               rows++; aceptadas++;
@@ -1645,13 +1760,155 @@ function renderDetailTable(){
 }
 function changePage(d){detailPage+=d;renderDetailTable();}
 
+// ════════════════════════════════════════
+// PESTAÑA CATEGORÍAS — drill-down con tarjetas
+// Niveles: 'grupo' → 'sub' → 'linea' → (tabla productos)
+// ════════════════════════════════════════
+let catNivel='grupo', catSelGrupo=null, catSelSub=null;
+
+function catGoTo(nivel,grupo,sub){
+  catNivel=nivel; catSelGrupo=grupo||null; catSelSub=sub||null;
+  renderCategorias();
+}
+
+function renderCategorias(){
+  const d=fd();
+  const total=d.reduce((s,r)=>s+r.costoTotal,0)||1;
+
+  // ── Breadcrumb ──
+  const bc=document.getElementById('cat-breadcrumb');
+  let crumbs=`<span style="cursor:pointer;color:#c9a84c;font-weight:600" onclick="catGoTo('grupo')">📂 Todas las categorías</span>`;
+  if(catSelGrupo){
+    const gn=CAT_GRUPOS[catSelGrupo]?CAT_GRUPOS[catSelGrupo].nombre:'Sin Clasificar';
+    crumbs+=`<span style="color:#7a7265">›</span><span style="cursor:pointer;color:${catColor(catSelGrupo)};font-weight:600" onclick="catGoTo('sub','${catSelGrupo}')">${catIcon(catSelGrupo)} ${gn}</span>`;
+  }
+  if(catSelSub){
+    const sn=CAT_SUB[catSelSub]||'—';
+    crumbs+=`<span style="color:#7a7265">›</span><span style="color:#e8e0d0;font-weight:600">${sn}</span>`;
+  }
+  bc.innerHTML=crumbs;
+
+  // ── Agrupar según nivel ──
+  let items=[], bannerTitle='', bannerSub='', bannerIcon='📦', chartTitle='', chartSub='', drillNext=null;
+  const productCard=document.getElementById('cat-prod-card');
+  productCard.style.display='none';
+
+  if(catNivel==='grupo'){
+    const map={};
+    d.forEach(r=>{ const k=r.catGrupo||'SC'; if(!map[k])map[k]={key:k,nom:r.catGrupoNom||'Sin Clasificar',total:0,count:0,prods:new Set()}; map[k].total+=r.costoTotal; map[k].count++; map[k].prods.add(r.nombre); });
+    items=Object.values(map);
+    bannerIcon='📊'; bannerTitle='Todas las categorías';
+    bannerSub=`${items.length} grupos de productos`;
+    chartTitle='Gasto por grupo'; chartSub='Distribución general';
+    drillNext='sub';
+  } else if(catNivel==='sub'){
+    const dd=d.filter(r=>(r.catGrupo||'SC')===catSelGrupo);
+    const map={};
+    dd.forEach(r=>{ const k=r.catSub||(catSelGrupo+'00'); if(!map[k])map[k]={key:k,nom:r.catSubNom||CAT_SUB[k]||'—',total:0,count:0,prods:new Set()}; map[k].total+=r.costoTotal; map[k].count++; map[k].prods.add(r.nombre); });
+    items=Object.values(map);
+    const gtot=dd.reduce((s,r)=>s+r.costoTotal,0);
+    bannerIcon=catIcon(catSelGrupo);
+    bannerTitle=CAT_GRUPOS[catSelGrupo]?CAT_GRUPOS[catSelGrupo].nombre:'Sin Clasificar';
+    bannerSub=`${items.length} subgrupos · ${new Set(dd.map(r=>r.nombre)).size} productos`;
+    chartTitle='Gasto por subgrupo'; chartSub=bannerTitle;
+    drillNext='linea';
+  } else if(catNivel==='linea'){
+    const dd=d.filter(r=>(r.catSub||'')===catSelSub);
+    const map={};
+    dd.forEach(r=>{ const k=r.catLinea||(catSelSub+'00'); if(!map[k])map[k]={key:k,nom:r.catLineaNom||CAT_LINEA[k]||'—',total:0,count:0,prods:new Set()}; map[k].total+=r.costoTotal; map[k].count++; map[k].prods.add(r.nombre); });
+    items=Object.values(map);
+    bannerIcon=catIcon(catSelGrupo);
+    bannerTitle=CAT_SUB[catSelSub]||'—';
+    bannerSub=`${items.length} líneas de producto`;
+    chartTitle='Gasto por línea'; chartSub=bannerTitle;
+    drillNext='prod';
+  }
+
+  items.sort((a,b)=>b.total-a.total);
+  const nivelTotal=items.reduce((s,it)=>s+it.total,0);
+
+  // ── Banner ──
+  document.getElementById('cat-banner-icon').textContent=bannerIcon;
+  document.getElementById('cat-banner-title').textContent=bannerTitle;
+  document.getElementById('cat-banner-sub').textContent=bannerSub;
+  document.getElementById('cat-banner-total').textContent=fmt(nivelTotal);
+  document.getElementById('cat-banner-pct').textContent=Math.round(nivelTotal/total*100)+'%';
+  document.getElementById('cat-banner-reg').textContent=items.reduce((s,it)=>s+it.count,0).toLocaleString('es-CO');
+
+  // ── Tarjetas ──
+  const maxT=items[0]?.total||1;
+  const grid=document.getElementById('cat-grid');
+  grid.innerHTML=items.map((it,i)=>{
+    const col=catNivel==='grupo'?catColor(it.key):COLORS[i%COLORS.length];
+    const pct=(it.total/nivelTotal*100).toFixed(1);
+    const clickable=drillNext!=='prod';
+    const onclick = drillNext==='sub' ? `catGoTo('sub','${it.key}')`
+                  : drillNext==='linea' ? `catGoTo('linea','${catSelGrupo}','${it.key}')`
+                  : `catShowLinea('${it.key}','${(it.nom||'').replace(/'/g,"\\'")}')`;
+    const arrow=clickable?'<span style="float:right;color:'+col+';opacity:.6">›</span>':'<span style="float:right;color:'+col+';opacity:.6;font-size:11px">ver ▸</span>';
+    return`<div class="supplier-card" style="cursor:pointer" onclick="${onclick}">
+      <div class="sup-header">
+        <div><div class="sup-name">${catNivel==='grupo'?catIcon(it.key)+' ':''}${it.nom}</div><div class="sup-nit">${it.prods.size} productos · ${it.count} reg.</div></div>
+        <div class="sup-dot" style="background:${col}"></div>
+      </div>
+      <div class="sup-stats">
+        <div class="sup-stat"><div class="sup-stat-label">Gasto</div><div class="sup-stat-val" style="color:${col}">${fmt(it.total)}</div></div>
+        <div class="sup-stat"><div class="sup-stat-label">% nivel</div><div class="sup-stat-val">${pct}%</div></div>
+      </div>
+      <div class="sup-bar"><div class="sup-bar-fill" style="width:${(it.total/maxT*100).toFixed(1)}%;background:${col}"></div></div>
+      <div style="margin-top:8px;font-size:11px;color:#7a7265">${arrow}</div>
+    </div>`;
+  }).join('')||'<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📭</div><h3>Sin datos</h3><p>No hay compras en este nivel para el período seleccionado.</p></div>';
+
+  // ── Gráfico ──
+  document.getElementById('cat-chart-title').textContent=chartTitle;
+  document.getElementById('cat-chart-sub').textContent=chartSub;
+  cCat=destroyChart(cCat);
+  if(items.length){
+    cCat=new Chart(document.getElementById('chart-cat').getContext('2d'),{
+      type:'bar',
+      data:{labels:items.map(it=>it.nom.length>26?it.nom.slice(0,26)+'…':it.nom),
+            datasets:[{data:items.map(it=>it.total),
+              backgroundColor:items.map((it,i)=>catNivel==='grupo'?catColor(it.key):COLORS[i%COLORS.length]),
+              borderRadius:4,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,clip:true,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}}},
+        scales:{x:{ticks:{color:'#7a7265',font:{size:10},callback:v=>fmt(v)},grid:{color:'#2e2b25'}},
+                y:{ticks:{color:'#e8e0d0',font:{size:11}},grid:{display:false}}}}
+    });
+  }
+}
+
+// Tabla de productos de una línea específica
+function catShowLinea(lineaKey,lineaNom){
+  const d=fd().filter(r=>(r.catLinea||'')===lineaKey);
+  const card=document.getElementById('cat-prod-card');
+  card.style.display='block';
+  document.getElementById('cat-prod-sub').textContent=lineaNom+' · '+d.length+' registros';
+  const pm={};
+  d.forEach(r=>{ if(!pm[r.nombre])pm[r.nombre]={nombre:r.nombre,sup:shortName(r.nombreProveedor||r.hoja),total:0,qty:0,unit:r.unidad||'und'}; pm[r.nombre].total+=r.costoTotal; pm[r.nombre].qty+=r.cantidad; });
+  const prods=Object.values(pm).sort((a,b)=>b.total-a.total);
+  const gt=prods.reduce((s,p)=>s+p.total,0)||1;
+  document.getElementById('cat-prod-body').innerHTML=prods.map((p,i)=>`
+    <tr>
+      <td style="color:#9a9080">${i+1}</td>
+      <td title="${p.nombre}">${p.nombre.length>38?p.nombre.slice(0,38)+'…':p.nombre}</td>
+      <td><span class="td-badge" style="background:#c9a84c22;color:#c9a84c">${p.sup.split(' ')[0]}</span></td>
+      <td class="td-num">${Math.round(p.qty).toLocaleString('es-CO')} ${p.unit}</td>
+      <td class="td-money">${fmtFull(p.total)}</td>
+      <td class="td-num" style="color:#9a9080">${(p.total/gt*100).toFixed(1)}%</td>
+    </tr>`).join('');
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
 // ── Tabs ─────────────────────────────
-const TABS=['resumen','proveedores','productos','comparativo','detalle'];
+const TABS=['resumen','categorias','proveedores','productos','comparativo','detalle'];
 function setTab(name){
   TABS.forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==name));
   document.querySelectorAll('.nav-tab').forEach((b,i)=>b.classList.toggle('active',TABS[i]===name));
   if(name==='detalle')renderDetailTable();
   if(name==='productos')renderProductos();
+  if(name==='categorias')renderCategorias();
 }
 
 function LM_goHome(){ goHome(); }
@@ -1669,6 +1926,15 @@ async function loadFromDB() {
 
     filesLoaded = filesSnap.docs.map(d => d.data());
     allData     = dataSnap.docs.map(d => d.data());
+
+    // Retro-compatibilidad: clasificar registros antiguos sin categoría
+    allData.forEach(r=>{
+      if(!r.catGrupo){
+        const cls=clasificar(r.codigo);
+        r.catGrupo=cls.grupo; r.catSub=cls.sub; r.catLinea=cls.linea;
+        r.catGrupoNom=cls.grupoNom; r.catSubNom=cls.subNom; r.catLineaNom=cls.lineaNom;
+      }
+    });
 
     // Si allData tiene datos pero filesLoaded está vacío, reconstruir desde allData
     if(allData.length > 0 && filesLoaded.length === 0){
