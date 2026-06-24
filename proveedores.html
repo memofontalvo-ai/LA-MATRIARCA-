@@ -1318,7 +1318,7 @@ async function limpiarTodo(){
       let intentoLec=0;
       while(true){
         try{
-          snap = await conTimeout(db.collection(COL_DATA).limit(100).get(), 30000, 'lectura de lote');
+          snap = await conTimeout(db.collection(COL_DATA).limit(100).get({source:'server'}), 30000, 'lectura de lote');
           break;
         }catch(lecErr){
           intentoLec++;
@@ -1362,6 +1362,24 @@ async function limpiarTodo(){
       }
     }
 
+    // VERIFICACIÓN FINAL: preguntar al SERVIDOR si de verdad quedó vacío
+    banner.style.background='#c9a84c';
+    banner.textContent='🔍 Verificación final contra el servidor...';
+    let quedan=-1;
+    try{
+      const check=await conTimeout(db.collection(COL_DATA).limit(10).get({source:'server'}), 30000, 'verificación final');
+      quedan=check.size;
+    }catch(vfErr){ quedan=-1; }
+
+    if(quedan>0){
+      // Todavía hay residuos en el servidor → avisar para volver a tocar Limpiar
+      banner.style.background='#c97a4c';
+      banner.textContent=`⚠️ Se borraron ${totalBorrados.toLocaleString()} pero el servidor aún reporta datos. TOCA "Limpiar" otra vez para terminar.`;
+      setTimeout(()=>{ banner.style.display='none'; }, 10000);
+      window._guardando=false;
+      return;
+    }
+
     allData=[]; filesLoaded=[];
     renderFilesLoaded(); refreshYearButtons(); updateMonthSelector();
     document.getElementById('dashboard').classList.add('hidden');
@@ -1369,7 +1387,7 @@ async function limpiarTodo(){
     const b=document.getElementById('btn-limpiar-todo');
     if(b) b.style.display='none';
     banner.style.background='#4caa6e';
-    banner.textContent=`✅ ${totalBorrados.toLocaleString()} registros borrados. Base de datos limpia.`;
+    banner.textContent=`✅ ${totalBorrados.toLocaleString()} registros borrados. Base de datos vacía (verificado).`;
     setTimeout(()=>{ banner.style.display='none'; }, 6000);
     window._guardando=false;
   }catch(e){
