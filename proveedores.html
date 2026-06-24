@@ -1268,23 +1268,14 @@ async function limpiarTodo(){
   banner.textContent='🗑️ Contando registros...';
   window._guardando=true; // proteger contra cierre accidental
   try{
-    // 0) Contar cuántos hay para mostrar porcentaje real
-    let totalAContar = 0;
-    try{
-      const agg = await db.collection(COL_DATA).count().get();
-      totalAContar = agg.data().count;
-    }catch(ctErr){
-      // Si count() no está disponible, usar lo que tenemos cargado como referencia
-      totalAContar = allData.length || 0;
-    }
-    banner.textContent = totalAContar>0
-      ? `🗑️ Borrando 0 de ${totalAContar.toLocaleString()} (0%)... NO CIERRES`
-      : '🗑️ Limpiando... NO CIERRES';
+    // Estimación inicial: lo que tenemos en memoria (referencia)
+    let estimado = allData.length || 0;
+    banner.textContent = '🗑️ Iniciando borrado... NO CIERRES';
 
-    // 1) Borrar metadatos de archivos (en lotes)
+    // 1) Borrar metadatos de archivos (en lotes pequeños)
     let fSnap;
     do {
-      fSnap = await db.collection(COL_FILES).limit(450).get();
+      fSnap = await db.collection(COL_FILES).limit(200).get();
       if(!fSnap.empty){
         const fb=db.batch();
         fSnap.docs.forEach(d=>fb.delete(d.ref));
@@ -1292,16 +1283,29 @@ async function limpiarTodo(){
       }
     } while(!fSnap.empty);
 
-    // 2) Borrar registros — lotes de 450, sin pausa, sin tope artificial
+    // 2) Borrar registros — lotes de 300 (consultas livianas en móvil)
     let totalBorrados = 0;
     let vacios = 0;
     while(true){
-      const snap = await db.collection(COL_DATA).limit(450).get();
+      let snap;
+      // Reintento también en la LECTURA (aquí es donde se colgaba antes)
+      let intentoLec=0;
+      while(true){
+        try{
+          snap = await db.collection(COL_DATA).limit(300).get();
+          break;
+        }catch(lecErr){
+          intentoLec++;
+          if(intentoLec>=4) throw lecErr;
+          banner.style.background='#c97a4c';
+          banner.textContent=`⚠️ Reintentando lectura (${intentoLec}/4)...`;
+          await new Promise(r=>setTimeout(r,1500));
+        }
+      }
       if(snap.empty){
-        // Doble verificación: confirmar 2 lecturas vacías seguidas antes de parar
         vacios++;
         if(vacios>=2) break;
-        await new Promise(r=>setTimeout(r,400));
+        await new Promise(r=>setTimeout(r,500));
         continue;
       }
       vacios=0;
@@ -1315,17 +1319,17 @@ async function limpiarTodo(){
           break;
         }catch(delErr){
           intento++;
-          if(intento>=3) throw delErr;
+          if(intento>=4) throw delErr;
           banner.style.background='#c97a4c';
-          banner.textContent=`⚠️ Reintentando borrado (${intento}/3)...`;
+          banner.textContent=`⚠️ Reintentando borrado (${intento}/4)...`;
           await new Promise(r=>setTimeout(r,1500));
         }
       }
       totalBorrados += snap.docs.length;
       banner.style.background='#c94c4c';
-      if(totalAContar>0){
-        const pct=Math.min(100,Math.round(totalBorrados/totalAContar*100));
-        banner.textContent = `🗑️ Borrando ${totalBorrados.toLocaleString()} de ${totalAContar.toLocaleString()} (${pct}%)... NO CIERRES`;
+      if(estimado>0 && totalBorrados<=estimado){
+        const pct=Math.min(99,Math.round(totalBorrados/estimado*100));
+        banner.textContent = `🗑️ Borrados ${totalBorrados.toLocaleString()} de ~${estimado.toLocaleString()} (${pct}%)... NO CIERRES`;
       } else {
         banner.textContent = `🗑️ Borrados ${totalBorrados.toLocaleString()}... NO CIERRES`;
       }
@@ -1343,8 +1347,12 @@ async function limpiarTodo(){
     window._guardando=false;
   }catch(e){
     banner.style.background='#c94c4c';
-    banner.textContent='⚠️ Se interrumpió el borrado. Vuelve a tocar "Limpiar" para continuar.';
-    setTimeout(()=>{ banner.style.display='none'; }, 8000);
+    const msg=(e&&e.message)?e.message:String(e);
+    let pista='';
+    if(/permission|insufficient/i.test(msg)) pista=' (Permisos de Firebase: revisa las reglas de Firestore)';
+    else if(/network|unavailable|transport/i.test(msg)) pista=' (Problema de conexión)';
+    banner.textContent='⚠️ Borrado detenido: '+msg+pista+' — Toca "Limpiar" otra vez para continuar.';
+    setTimeout(()=>{ banner.style.display='none'; }, 12000);
     console.error('Limpiar error:',e);
     window._guardando=false;
   }
