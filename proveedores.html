@@ -1256,7 +1256,6 @@ function readExcel(file,periodLabel,year,month){
 
 async function limpiarTodo(){
   if(!confirm('¿Borrar TODOS los datos de proveedores?')) return;
-  // Banner permanente de progreso
   let banner = document.getElementById('save-banner');
   if(!banner){
     banner = document.createElement('div');
@@ -1267,25 +1266,53 @@ async function limpiarTodo(){
   banner.style.background='#c94c4c'; banner.style.color='#fff';
   banner.style.display='block';
   banner.textContent='🗑️ Limpiando... NO CIERRES LA APP';
+  window._guardando=true; // proteger contra cierre accidental
   try{
-    // Borrar archivos
-    const filesSnap = await db.collection(COL_FILES).get();
-    for(const doc of filesSnap.docs) await doc.ref.delete();
-    // Borrar registros EN BUCLE hasta que Firebase quede vacío
+    // 1) Borrar metadatos de archivos (en lotes)
+    let fSnap;
+    do {
+      fSnap = await db.collection(COL_FILES).limit(450).get();
+      if(!fSnap.empty){
+        const fb=db.batch();
+        fSnap.docs.forEach(d=>fb.delete(d.ref));
+        await fb.commit();
+      }
+    } while(!fSnap.empty);
+
+    // 2) Borrar registros — lotes de 450, sin pausa, sin tope artificial
     let totalBorrados = 0;
-    let vuelta = 0;
+    let vacios = 0;
     while(true){
-      vuelta++;
-      const snap = await db.collection(COL_DATA).limit(400).get();
-      if(snap.empty) break;
-      const batch = db.batch();
-      snap.docs.forEach(d=>batch.delete(d.ref));
-      await batch.commit();
+      const snap = await db.collection(COL_DATA).limit(450).get();
+      if(snap.empty){
+        // Doble verificación: confirmar 2 lecturas vacías seguidas antes de parar
+        vacios++;
+        if(vacios>=2) break;
+        await new Promise(r=>setTimeout(r,400));
+        continue;
+      }
+      vacios=0;
+      // Reintento del lote ante fallo de red
+      let intento=0;
+      while(true){
+        try{
+          const batch = db.batch();
+          snap.docs.forEach(d=>batch.delete(d.ref));
+          await batch.commit();
+          break;
+        }catch(delErr){
+          intento++;
+          if(intento>=3) throw delErr;
+          banner.style.background='#c97a4c';
+          banner.textContent=`⚠️ Reintentando borrado (${intento}/3)...`;
+          await new Promise(r=>setTimeout(r,1500));
+        }
+      }
       totalBorrados += snap.docs.length;
-      banner.textContent = `🗑️ Borrados ${totalBorrados}... NO CIERRES LA APP`;
-      await new Promise(r=>setTimeout(r,200));
-      if(vuelta>50) break; // seguridad
+      banner.style.background='#c94c4c';
+      banner.textContent = `🗑️ Borrados ${totalBorrados.toLocaleString()}... NO CIERRES`;
     }
+
     allData=[]; filesLoaded=[];
     renderFilesLoaded(); refreshYearButtons(); updateMonthSelector();
     document.getElementById('dashboard').classList.add('hidden');
@@ -1293,11 +1320,15 @@ async function limpiarTodo(){
     const b=document.getElementById('btn-limpiar-todo');
     if(b) b.style.display='none';
     banner.style.background='#4caa6e';
-    banner.textContent=`✅ ${totalBorrados} registros borrados. Ahora sube el Excel de nuevo.`;
+    banner.textContent=`✅ ${totalBorrados.toLocaleString()} registros borrados. Base de datos limpia.`;
     setTimeout(()=>{ banner.style.display='none'; }, 6000);
+    window._guardando=false;
   }catch(e){
-    banner.textContent='⚠️ Error: '+e.message;
-    setTimeout(()=>{ banner.style.display='none'; }, 6000);
+    banner.style.background='#c94c4c';
+    banner.textContent='⚠️ Se interrumpió el borrado. Vuelve a tocar "Limpiar" para continuar.';
+    setTimeout(()=>{ banner.style.display='none'; }, 8000);
+    console.error('Limpiar error:',e);
+    window._guardando=false;
   }
 }
 
