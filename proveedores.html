@@ -423,6 +423,8 @@ canvas{display:block;max-width:100%!important;}
 
       <div class="files-loaded" id="files-loaded"></div>
       <button id="btn-limpiar-todo" onclick="limpiarTodo()" style="display:none;margin-top:8px;width:100%;padding:10px;background:#c94c4c;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">🗑️ Limpiar todos los datos</button>
+      <button id="btn-diagnostico" onclick="diagnosticarFirebase()" style="display:none;margin-top:8px;width:100%;padding:10px;background:#4c8ec9;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">🔬 Diagnóstico de Firebase</button>
+      <div id="diag-resultado" style="display:none;margin-top:10px;padding:14px;background:#161412;border:1px solid #2e2b25;border-radius:10px;font-size:13px;color:#e8e0d0;line-height:1.7;white-space:pre-wrap;font-family:monospace;"></div>
     </div>
 
     <!-- Empty -->
@@ -1254,6 +1256,77 @@ function readExcel(file,periodLabel,year,month){
   reader.readAsArrayBuffer(file);
 }
 
+// ════════════════════════════════════════
+// DIAGNÓSTICO DE FIREBASE — identifica qué falla
+// ════════════════════════════════════════
+async function diagnosticarFirebase(){
+  const out=document.getElementById('diag-resultado');
+  out.style.display='block';
+  let log='🔬 DIAGNÓSTICO EN CURSO...\n\n';
+  out.textContent=log;
+  const add=(t)=>{ log+=t+'\n'; out.textContent=log; };
+  const cron=async(etiqueta,fn)=>{
+    const t0=Date.now();
+    try{
+      const r=await fn();
+      const ms=Date.now()-t0;
+      add(`✅ ${etiqueta}: OK (${ms}ms)`);
+      return {ok:true,ms,r};
+    }catch(e){
+      const ms=Date.now()-t0;
+      add(`❌ ${etiqueta}: FALLÓ (${ms}ms)\n   → ${e.message||e}`);
+      return {ok:false,ms,e};
+    }
+  };
+
+  // 1) ¿db existe?
+  if(!db){ add('❌ Firebase no está inicializado (db es null)'); return; }
+  add('✅ Firebase inicializado');
+  add(`   Proyecto: ${firebase.app().options.projectId}\n`);
+
+  // 2) Leer desde el SERVIDOR (1 doc) — mide velocidad real de red
+  const lec=await cron('Lectura desde servidor (1 doc)',
+    ()=>db.collection(COL_DATA).limit(1).get({source:'server'}));
+
+  // 3) Contar cuántos hay realmente en el servidor
+  await cron('Conteo real en servidor', async()=>{
+    const s=await db.collection(COL_DATA).limit(500).get({source:'server'});
+    add(`   → Hay al menos ${s.size} registros (mostrando máx 500)`);
+    return s.size;
+  });
+
+  // 4) ESCRIBIR un documento de prueba
+  const testId='_diagtest_'+Date.now();
+  const esc=await cron('Escritura de prueba',
+    ()=>db.collection(COL_DATA).doc(testId).set({_test:true,creado:Date.now()}));
+
+  // 5) BORRAR ese documento de prueba — la operación crítica
+  if(esc.ok){
+    const bor=await cron('Borrado de prueba (LA CLAVE)',
+      ()=>db.collection(COL_DATA).doc(testId).delete());
+    if(!bor.ok){
+      add('\n🚨 EL BORRADO ES EL PROBLEMA.');
+      add('   Si dice "permission" → reglas de Firestore.');
+      add('   Si dice "timeout/unavailable" → conexión.');
+    }
+  }
+
+  // 6) Borrar un lote real de 50 con cronómetro
+  if(lec.ok && !lec.r.empty){
+    await cron('Borrado de lote real (50 docs)', async()=>{
+      const s=await db.collection(COL_DATA).limit(50).get({source:'server'});
+      if(s.empty){ add('   → Ya no hay docs que borrar'); return 0; }
+      const batch=db.batch();
+      s.docs.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+      add(`   → Borró ${s.size} docs en este lote`);
+      return s.size;
+    });
+  }
+
+  add('\n📋 RESUMEN: copia esta pantalla y compártela.');
+}
+
 async function limpiarTodo(){
   if(!confirm('¿Borrar TODOS los datos de proveedores?')) return;
   let banner = document.getElementById('save-banner');
@@ -1449,6 +1522,9 @@ function renderFilesLoaded(){
     document.getElementById('files-loaded').after(btnLimpiar);
   }
   btnLimpiar.style.display = filesLoaded.length > 0 ? 'block' : 'none';
+  // Botón de diagnóstico: visible siempre que haya datos o se quiera revisar
+  const btnDiag=document.getElementById('btn-diagnostico');
+  if(btnDiag) btnDiag.style.display = 'block';
 }
 
 // ── Filtered data ──────────────────
@@ -2162,6 +2238,9 @@ async function loadFromDB() {
       if(rolActual==='auxiliar') renderAuxPanel();
       showToast('📋 Sin datos guardados aún');
     }
+    // El diagnóstico debe estar disponible siempre (incluso si la pantalla está vacía)
+    const bd=document.getElementById('btn-diagnostico');
+    if(bd) bd.style.display='block';
   } catch(err) {
     console.error('Firebase load error:', err);
     showToast('⚠️ Error cargando: ' + err.message);
