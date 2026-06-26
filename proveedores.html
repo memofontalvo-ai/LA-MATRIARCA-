@@ -986,8 +986,24 @@ function processFile(file){
   document.getElementById('modal-fname').textContent=file.name;
   const ym=file.name.match(/20\d{2}/);
   if(ym)document.getElementById('sel-year').value=ym[0];
-  const mm=file.name.match(/_(0?[1-9]|1[0-2])_/i);
-  document.getElementById('sel-month').value=mm?parseInt(mm[1]):0;
+  // Detectar mes por nombre en español o por número
+  const nombreLimpio=file.name.toUpperCase()
+    .replace(/Á/g,'A').replace(/É/g,'E').replace(/Í/g,'I').replace(/Ó/g,'O').replace(/Ú/g,'U');
+  const mesesNombre={
+    'ENERO':1,'FEBRERO':2,'MARZO':3,'ABRIL':4,'MAYO':5,'JUNIO':6,
+    'JULIO':7,'AGOSTO':8,'SEPTIEMBRE':9,'SETIEMBRE':9,'OCTUBRE':10,
+    'NOVIEMBRE':11,'DICIEMBRE':12
+  };
+  let mesDetectado=0;
+  for(const [nombre,num] of Object.entries(mesesNombre)){
+    if(nombreLimpio.includes(nombre)){ mesDetectado=num; break; }
+  }
+  // Si no encontró nombre, intentar formato numérico _01_ o -01-
+  if(mesDetectado===0){
+    const mm=file.name.match(/[_\-\s](0?[1-9]|1[0-2])[_\-\s]/);
+    if(mm) mesDetectado=parseInt(mm[1]);
+  }
+  document.getElementById('sel-month').value=mesDetectado;
   document.getElementById('modal').classList.remove('hidden');
 }
 
@@ -1017,9 +1033,18 @@ function processJSON(file){
     });
 
     const years=[...new Set(newRows.map(r=>r.year))];
-    const label=years.length===1?`Año ${years[0]}`:`${years.length} años`;
-    const yearMeta=years.length===1?years[0]:0;
-    const fileMeta={id:fileId,name:file.name,periodoLabel:label,year:yearMeta,month:0,rows:newRows.length};
+    const months=[...new Set(newRows.map(r=>r.month))];
+    let label, yearMeta, monthMeta=0;
+    if(years.length===1 && months.length===1){
+      // JSON de un solo mes → etiqueta con el mes
+      yearMeta=years[0]; monthMeta=months[0];
+      label=`${MESES[monthMeta]} ${yearMeta}`;
+    } else if(years.length===1){
+      yearMeta=years[0]; label=`Año ${years[0]}`;
+    } else {
+      yearMeta=0; label=`${years.length} años`;
+    }
+    const fileMeta={id:fileId,name:file.name,periodoLabel:label,year:yearMeta,month:monthMeta,rows:newRows.length};
     filesLoaded.push(fileMeta);
     renderFilesLoaded();refreshYearButtons();updateMonthSelector();renderDashboard();
     showToast(`✓ ${file.name} — ${newRows.length.toLocaleString()} registros`);
@@ -1094,7 +1119,7 @@ function readExcel(file,periodLabel,year,month){
       // Estructura FIJA del archivo CON fecha (por posición de columna):
       // 0=FechaDocumento 1=Proveedor 2=NombreProveedor 3=Codigo 4=Presentacion
       // 5=Nombre 6=Cantidad 7=ValorUnidad 8=PorceIva 9=PorceInc 10=PorceDcto 11=CostoTotal
-      const C_FECHA=0, C_PROV=1, C_NOMPROV=2, C_CODIGO=3, C_PRES=4, C_NOMBRE=5, C_CANT=6, C_VALUNI=7, C_COSTO=11;
+      const C_FECHA=0, C_PROV=1, C_NOMPROV=2, C_CODIGO=3, C_PRES=4, C_NOMBRE=5, C_CANT=6, C_VALUNI=9, C_COSTO=13;
 
       function aNumero(v){
         if(typeof v==='number') return v;
@@ -1502,16 +1527,59 @@ async function removeFile(fileId){
     showToast('⚠️ Error eliminando de Firebase: ' + err.message);
   }
 }
+let aniosAbiertos = {}; // recuerda qué años están desplegados
+
+function toggleAnio(anio){
+  aniosAbiertos[anio] = !aniosAbiertos[anio];
+  renderFilesLoaded();
+}
+
 function renderFilesLoaded(){
-  document.getElementById('files-loaded').innerHTML=filesLoaded.map(f=>`
-    <div class="file-chip">
-      <span>📄</span><span class="chip-name">${f.name}</span>
-      <span class="chip-period">${f.periodoLabel}</span>
-      <span class="chip-rows">${f.rows.toLocaleString()} reg.</span>
-      <button class="chip-remove" onclick="removeFile('${f.id}')">✕</button>
-    </div>`).join('');
-  
-  // Mostrar botón limpiar todo si hay archivos
+  const cont = document.getElementById('files-loaded');
+  if(!filesLoaded.length){ cont.innerHTML=''; }
+  else {
+    // Agrupar archivos por año
+    const porAnio = {};
+    filesLoaded.forEach(f=>{
+      const a = f.year || 'Sin año';
+      if(!porAnio[a]) porAnio[a]=[];
+      porAnio[a].push(f);
+    });
+    const aniosOrden = Object.keys(porAnio).sort((a,b)=>String(b).localeCompare(String(a)));
+    const MES_ORD=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+    cont.innerHTML = aniosOrden.map(anio=>{
+      const archivos = porAnio[anio];
+      const abierto = !!aniosAbiertos[anio];
+      const totalReg = archivos.reduce((s,f)=>s+(f.rows||0),0);
+      // Ordenar meses dentro del año
+      archivos.sort((a,b)=>(a.month||0)-(b.month||0));
+      // Cabecera del año (plegable)
+      const flecha = abierto ? '▾' : '▸';
+      let html = `<div class="anio-grupo" style="margin-bottom:8px;">
+        <div onclick="toggleAnio('${anio}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(201,168,76,.10);border:1px solid rgba(201,168,76,.35);border-radius:10px;cursor:pointer;">
+          <span style="font-size:14px;color:#c9a84c;">${flecha}</span>
+          <span style="font-family:'Playfair Display',serif;font-size:16px;color:#e8e0d0;font-weight:700;flex:1;">📅 Año ${anio}</span>
+          <span style="font-size:11px;color:#9a9080;">${archivos.length} ${archivos.length===1?'mes':'meses'} · ${totalReg.toLocaleString()} reg.</span>
+        </div>`;
+      // Meses desplegados
+      if(abierto){
+        html += `<div style="padding:6px 0 0 14px;">` + archivos.map(f=>{
+          const mesLbl = f.month ? MES_ORD[f.month] : (f.periodoLabel||'');
+          return `<div class="file-chip" style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-top:5px;background:#161412;border:1px solid #2e2b25;border-radius:8px;">
+            <span>📄</span>
+            <span class="chip-name" style="flex:1;color:#e8e0d0;font-size:13px;font-weight:600;">${mesLbl} ${anio}</span>
+            <span class="chip-rows" style="font-size:11px;color:#9a9080;">${(f.rows||0).toLocaleString()} reg.</span>
+            <button class="chip-remove" onclick="removeFile('${f.id}')" style="background:#c94c4c;color:#fff;border:none;border-radius:6px;width:24px;height:24px;cursor:pointer;font-weight:700;">✕</button>
+          </div>`;
+        }).join('') + `</div>`;
+      }
+      html += `</div>`;
+      return html;
+    }).join('');
+  }
+
+  // Botón limpiar todo
   let btnLimpiar = document.getElementById('btn-limpiar-todo');
   if(!btnLimpiar){
     btnLimpiar = document.createElement('button');
@@ -1522,7 +1590,6 @@ function renderFilesLoaded(){
     document.getElementById('files-loaded').after(btnLimpiar);
   }
   btnLimpiar.style.display = filesLoaded.length > 0 ? 'block' : 'none';
-  // Botón de diagnóstico: visible siempre que haya datos o se quiera revisar
   const btnDiag=document.getElementById('btn-diagnostico');
   if(btnDiag) btnDiag.style.display = 'block';
 }
