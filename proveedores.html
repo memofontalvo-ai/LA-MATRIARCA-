@@ -1824,22 +1824,38 @@ function compararPrecios(nombreProd){
 
   // Agrupar por proveedor: precio promedio ponderado y último precio
   const provs={};
+  let presentacion='und';
   d.forEach(r=>{
     const k=(r.nombreProveedor||r.proveedor||'—').trim();
     if(!provs[k]) provs[k]={nom:k,sumCosto:0,sumQty:0,compras:0,ultimoPrecio:0,ultimoY:0,ultimoM:0,unit:r.unidad||'und'};
+    // Tomar la presentación real del Excel (GRS, UND, ML, etc.)
+    if(r.presentacion){
+      const pres=String(r.presentacion).toUpperCase();
+      if(pres==='GRS'||pres==='GR') presentacion='gramo';
+      else if(pres==='KG'||pres==='KGS') presentacion='kg';
+      else if(pres==='ML') presentacion='ml';
+      else if(pres==='LT'||pres==='L') presentacion='litro';
+      else if(pres==='UND'||pres==='UN') presentacion='unidad';
+      else if(pres==='MIL') presentacion=r.unidad==='bot'?'botella':(r.unidad==='L'?'litro':'unidad');
+      else presentacion=pres.toLowerCase();
+    }
     const p=provs[k];
     p.sumCosto+=r.costoTotal; p.sumQty+=r.cantidad; p.compras++;
-    // último precio: el de la fecha más reciente (year, month)
     const yy=r.year||0, mm=r.month||0;
     if(yy>p.ultimoY || (yy===p.ultimoY && mm>=p.ultimoM)){
       p.ultimoY=yy; p.ultimoM=mm; p.ultimoPrecio=r.valorUnidad;
     }
   });
 
+  // Si viene en gramos, convertir el precio a KILO (×1000) y mostrar la unidad como "kilo"
+  let factor=1;
+  if(presentacion==='gramo'){ factor=1000; presentacion='kilo'; }
+  else if(presentacion==='ml'){ factor=1000; presentacion='litro'; }
+
   let lista=Object.values(provs).map(p=>({
     nom:p.nom,
-    promedio: p.sumQty>0 ? p.sumCosto/p.sumQty : 0,
-    ultimo: p.ultimoPrecio,
+    promedio: p.sumQty>0 ? (p.sumCosto/p.sumQty)*factor : 0,
+    ultimo: p.ultimoPrecio*factor,
     compras:p.compras,
     unit:p.unit
   })).filter(p=>p.promedio>0);
@@ -1853,7 +1869,7 @@ function compararPrecios(nombreProd){
 
   // Cabecera
   document.getElementById('cmp-title').textContent=nombreProd;
-  document.getElementById('cmp-sub').textContent=`${lista.length} ${lista.length===1?'proveedor':'proveedores'} · precio por ${mejor.unit}`;
+  document.getElementById('cmp-sub').textContent=`${lista.length} ${lista.length===1?'proveedor':'proveedores'} · precio por ${presentacion}`;
 
   // Resumen mejor/peor
   let html='';
@@ -1873,7 +1889,7 @@ function compararPrecios(nombreProd){
     if(ahorro>0){
       html+=`<div style="background:rgba(201,168,76,.10);border:1px solid rgba(201,168,76,.4);border-radius:10px;padding:10px 12px;margin-bottom:14px;text-align:center;">
         <span style="font-size:12px;color:#9a9080;">Comprándole al más barato ahorras </span>
-        <span style="font-size:14px;color:#c9a84c;font-weight:700;">${fmtFull(ahorro)} por ${mejor.unit}</span>
+        <span style="font-size:14px;color:#c9a84c;font-weight:700;">${fmtFull(ahorro)} por ${presentacion}</span>
         <span style="font-size:12px;color:#9a9080;"> (${ahorroPct.toFixed(0)}% menos)</span>
       </div>`;
     }
