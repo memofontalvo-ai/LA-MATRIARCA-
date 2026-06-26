@@ -519,11 +519,11 @@ canvas{display:block;max-width:100%!important;}
         </div>
         <!-- Tabla de productos (solo en nivel línea) -->
         <div class="chart-card" id="cat-prod-card" style="display:none;">
-          <div class="chart-title">Productos de esta línea</div>
+          <div class="chart-title">Detalle del producto</div>
           <div class="chart-subtitle" id="cat-prod-sub"></div>
           <div class="table-wrap" style="margin-top:10px;max-height:420px;overflow-y:auto">
             <table>
-              <thead><tr><th>#</th><th>Producto</th><th>Proveedor</th><th class="td-num">Cantidad</th><th class="td-num">Gasto $</th><th class="td-num">%</th></tr></thead>
+              <thead><tr><th>#</th><th>Periodo</th><th class="td-num">Cantidad</th><th class="td-num">Gasto $</th><th class="td-num">%</th></tr></thead>
               <tbody id="cat-prod-body"></tbody>
             </table>
           </div>
@@ -2110,10 +2110,10 @@ function changePage(d){detailPage+=d;renderDetailTable();}
 // PESTAÑA CATEGORÍAS — drill-down con tarjetas
 // Niveles: 'grupo' → 'sub' → 'linea' → (tabla productos)
 // ════════════════════════════════════════
-let catNivel='grupo', catSelGrupo=null, catSelSub=null;
+let catNivel='grupo', catSelGrupo=null, catSelSub=null, catSelProv=null;
 
-function catGoTo(nivel,grupo,sub){
-  catNivel=nivel; catSelGrupo=grupo||null; catSelSub=sub||null;
+function catGoTo(nivel,grupo,sub,prov){
+  catNivel=nivel; catSelGrupo=grupo||null; catSelSub=sub||null; catSelProv=prov||null;
   renderCategorias();
 }
 
@@ -2130,7 +2130,11 @@ function renderCategorias(){
   }
   if(catSelSub){
     const sn=CAT_SUB[catSelSub]||'—';
-    crumbs+=`<span style="color:#7a7265">›</span><span style="color:#e8e0d0;font-weight:600">${sn}</span>`;
+    const clickSub = catSelProv ? `style="cursor:pointer;color:${catColor(catSelGrupo)};font-weight:600" onclick="catGoTo('linea','${catSelGrupo}','${catSelSub}')"` : `style="color:#e8e0d0;font-weight:600"`;
+    crumbs+=`<span style="color:#7a7265">›</span><span ${clickSub}>${sn}</span>`;
+  }
+  if(catSelProv){
+    crumbs+=`<span style="color:#7a7265">›</span><span style="color:#e8e0d0;font-weight:600">🏪 ${shortName(catSelProv)}</span>`;
   }
   bc.innerHTML=crumbs;
 
@@ -2159,14 +2163,34 @@ function renderCategorias(){
     chartTitle='Gasto por subgrupo'; chartSub=bannerTitle;
     drillNext='linea';
   } else if(catNivel==='linea'){
+    // Ahora este nivel muestra PROVEEDORES del subgrupo (ordenados por gasto)
     const dd=d.filter(r=>(r.catSub||'')===catSelSub);
     const map={};
-    dd.forEach(r=>{ const k=r.catLinea||(catSelSub+'00'); if(!map[k])map[k]={key:k,nom:r.catLineaNom||CAT_LINEA[k]||'—',total:0,count:0,prods:new Set()}; map[k].total+=r.costoTotal; map[k].count++; map[k].prods.add(r.nombre); });
+    dd.forEach(r=>{
+      const k=(r.nombreProveedor||r.proveedor||'—').trim();
+      if(!map[k])map[k]={key:k,nom:k,total:0,count:0,prods:new Set(),esProv:true};
+      map[k].total+=r.costoTotal; map[k].count++; map[k].prods.add(r.nombre);
+    });
     items=Object.values(map);
     bannerIcon=catIcon(catSelGrupo);
     bannerTitle=CAT_SUB[catSelSub]||'—';
-    bannerSub=`${items.length} líneas de producto`;
-    chartTitle='Gasto por línea'; chartSub=bannerTitle;
+    bannerSub=`${items.length} proveedores · ${new Set(dd.map(r=>r.nombre)).size} productos`;
+    chartTitle='Gasto por proveedor'; chartSub=bannerTitle;
+    drillNext='prov';
+  } else if(catNivel==='prov'){
+    // Productos de un proveedor dentro del subgrupo seleccionado
+    const dd=d.filter(r=>(r.catSub||'')===catSelSub && (r.nombreProveedor||r.proveedor||'—').trim()===catSelProv);
+    const map={};
+    dd.forEach(r=>{
+      const k=r.nombre;
+      if(!map[k])map[k]={key:k,nom:k,total:0,count:0,prods:new Set([k]),qty:0,unit:r.unidad||'und'};
+      map[k].total+=r.costoTotal; map[k].count++; map[k].qty+=r.cantidad;
+    });
+    items=Object.values(map);
+    bannerIcon='🏪';
+    bannerTitle=shortName(catSelProv);
+    bannerSub=`${items.length} productos · ${CAT_SUB[catSelSub]||''}`;
+    chartTitle='Productos más comprados'; chartSub=shortName(catSelProv);
     drillNext='prod';
   }
 
@@ -2188,13 +2212,16 @@ function renderCategorias(){
     const col=catNivel==='grupo'?catColor(it.key):COLORS[i%COLORS.length];
     const pct=(it.total/nivelTotal*100).toFixed(1);
     const clickable=drillNext!=='prod';
-    const onclick = drillNext==='sub' ? `catGoTo('sub','${it.key}')`
-                  : drillNext==='linea' ? `catGoTo('linea','${catSelGrupo}','${it.key}')`
-                  : `catShowLinea('${it.key}','${(it.nom||'').replace(/'/g,"\\'")}')`;
+    const esc=s=>String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const onclick = drillNext==='sub' ? `catGoTo('sub','${esc(it.key)}')`
+                  : drillNext==='linea' ? `catGoTo('linea','${esc(catSelGrupo)}','${esc(it.key)}')`
+                  : drillNext==='prov' ? `catGoTo('prov','${esc(catSelGrupo)}','${esc(catSelSub)}','${esc(it.key)}')`
+                  : `catShowProducto('${esc(it.key)}','${esc(it.nom)}')`;
+    const labelDetalle = (catNivel==='prov') ? `${Math.round(it.qty).toLocaleString('es-CO')} ${it.unit||'und'} · ${it.count} compras` : `${it.prods.size} productos · ${it.count} reg.`;
     const arrow=clickable?'<span style="float:right;color:'+col+';opacity:.6">›</span>':'<span style="float:right;color:'+col+';opacity:.6;font-size:11px">ver ▸</span>';
     return`<div class="supplier-card" style="cursor:pointer" onclick="${onclick}">
       <div class="sup-header">
-        <div><div class="sup-name">${catNivel==='grupo'?catIcon(it.key)+' ':''}${it.nom}</div><div class="sup-nit">${it.prods.size} productos · ${it.count} reg.</div></div>
+        <div><div class="sup-name">${catNivel==='grupo'?catIcon(it.key)+' ':(catNivel==='linea'?'🏪 ':'')}${catNivel==='linea'?shortName(it.nom):it.nom}</div><div class="sup-nit">${labelDetalle}</div></div>
         <div class="sup-dot" style="background:${col}"></div>
       </div>
       <div class="sup-stats">
@@ -2256,21 +2283,24 @@ function renderCategorias(){
   }
 }
 
-// Tabla de productos de una línea específica
-function catShowLinea(lineaKey,lineaNom){
-  const d=fd().filter(r=>(r.catLinea||'')===lineaKey);
+// Tabla de detalle de un producto específico (de un proveedor, en un subgrupo)
+function catShowProducto(prodKey,prodNom){
+  const d=fd().filter(r=>r.nombre===prodKey
+    && (r.catSub||'')===catSelSub
+    && (r.nombreProveedor||r.proveedor||'—').trim()===catSelProv);
   const card=document.getElementById('cat-prod-card');
   card.style.display='block';
-  document.getElementById('cat-prod-sub').textContent=lineaNom+' · '+d.length+' registros';
-  const pm={};
-  d.forEach(r=>{ if(!pm[r.nombre])pm[r.nombre]={nombre:r.nombre,sup:shortName(r.nombreProveedor||r.hoja),total:0,qty:0,unit:r.unidad||'und'}; pm[r.nombre].total+=r.costoTotal; pm[r.nombre].qty+=r.cantidad; });
-  const prods=Object.values(pm).sort((a,b)=>b.total-a.total);
-  const gt=prods.reduce((s,p)=>s+p.total,0)||1;
-  document.getElementById('cat-prod-body').innerHTML=prods.map((p,i)=>`
+  const totalProd=d.reduce((s,r)=>s+r.costoTotal,0);
+  const qtyProd=d.reduce((s,r)=>s+r.cantidad,0);
+  document.getElementById('cat-prod-sub').textContent=`${shortName(prodNom)} · ${d.length} compras · ${fmtFull(totalProd)}`;
+  // Detalle por cada compra (fecha/periodo)
+  const filas=d.map(r=>({per:r.periodoLabel||'—',qty:r.cantidad,unit:r.unidad||'und',vu:r.valorUnidad,total:r.costoTotal}))
+    .sort((a,b)=>b.total-a.total);
+  const gt=totalProd||1;
+  document.getElementById('cat-prod-body').innerHTML=filas.map((p,i)=>`
     <tr>
       <td style="color:#9a9080">${i+1}</td>
-      <td title="${p.nombre}">${p.nombre.length>38?p.nombre.slice(0,38)+'…':p.nombre}</td>
-      <td><span class="td-badge" style="background:#c9a84c22;color:#c9a84c">${p.sup.split(' ')[0]}</span></td>
+      <td>${p.per}</td>
       <td class="td-num">${Math.round(p.qty).toLocaleString('es-CO')} ${p.unit}</td>
       <td class="td-money">${fmtFull(p.total)}</td>
       <td class="td-num" style="color:#9a9080">${(p.total/gt*100).toFixed(1)}%</td>
