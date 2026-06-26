@@ -2163,22 +2163,22 @@ function renderCategorias(){
     chartTitle='Gasto por subgrupo'; chartSub=bannerTitle;
     drillNext='linea';
   } else if(catNivel==='linea'){
-    // Ahora este nivel muestra PROVEEDORES del subgrupo (ordenados por gasto)
+    // Al tocar un subgrupo (ej. Bebidas Alcohólicas) → ranking de PROVEEDORES de esa categoría
     const dd=d.filter(r=>(r.catSub||'')===catSelSub);
     const map={};
     dd.forEach(r=>{
       const k=(r.nombreProveedor||r.proveedor||'—').trim();
-      if(!map[k])map[k]={key:k,nom:k,total:0,count:0,prods:new Set(),esProv:true};
+      if(!map[k])map[k]={key:k,nom:k,total:0,count:0,prods:new Set()};
       map[k].total+=r.costoTotal; map[k].count++; map[k].prods.add(r.nombre);
     });
     items=Object.values(map);
     bannerIcon=catIcon(catSelGrupo);
     bannerTitle=CAT_SUB[catSelSub]||'—';
     bannerSub=`${items.length} proveedores · ${new Set(dd.map(r=>r.nombre)).size} productos`;
-    chartTitle='Gasto por proveedor'; chartSub=bannerTitle;
+    chartTitle='Ranking de proveedores'; chartSub=bannerTitle;
     drillNext='prov';
   } else if(catNivel==='prov'){
-    // Productos de un proveedor dentro del subgrupo seleccionado
+    // Al tocar un proveedor → ranking de PRODUCTOS que le compras (en esa categoría)
     const dd=d.filter(r=>(r.catSub||'')===catSelSub && (r.nombreProveedor||r.proveedor||'—').trim()===catSelProv);
     const map={};
     dd.forEach(r=>{
