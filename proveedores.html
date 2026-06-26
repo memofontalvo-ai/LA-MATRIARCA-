@@ -2211,16 +2211,47 @@ function renderCategorias(){
   document.getElementById('cat-chart-sub').textContent=chartSub;
   cCat=destroyChart(cCat);
   if(items.length){
+    // Plugin para dibujar el valor al final de cada barra (siempre visible)
+    const etiquetasValor={
+      id:'etiquetasValor',
+      afterDatasetsDraw(chart){
+        const {ctx}=chart;
+        const meta=chart.getDatasetMeta(0);
+        ctx.save();
+        ctx.font='bold 12px -apple-system, sans-serif';
+        ctx.textBaseline='middle';
+        meta.data.forEach((bar,i)=>{
+          const val=chart.data.datasets[0].data[i];
+          const txt=fmt(val);
+          const x=bar.x+8; // un poco a la derecha del final de la barra
+          const y=bar.y;
+          // Si la barra es muy larga y el texto se saldría, ponerlo dentro
+          const anchoTxt=ctx.measureText(txt).width;
+          if(x+anchoTxt > chart.chartArea.right){
+            ctx.fillStyle='#0f0e0c';
+            ctx.textAlign='right';
+            ctx.fillText(txt, bar.x-8, y);
+          } else {
+            ctx.fillStyle='#e8e0d0';
+            ctx.textAlign='left';
+            ctx.fillText(txt, x, y);
+          }
+        });
+        ctx.restore();
+      }
+    };
     cCat=new Chart(document.getElementById('chart-cat').getContext('2d'),{
       type:'bar',
       data:{labels:items.map(it=>it.nom.length>26?it.nom.slice(0,26)+'…':it.nom),
             datasets:[{data:items.map(it=>it.total),
               backgroundColor:items.map((it,i)=>catNivel==='grupo'?catColor(it.key):COLORS[i%COLORS.length]),
               borderRadius:4,borderSkipped:false}]},
-      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,clip:true,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}}},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,clip:false,
+        layout:{padding:{right:90}},
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
         scales:{x:{ticks:{color:'#7a7265',font:{size:10},callback:v=>fmt(v)},grid:{color:'#2e2b25'}},
-                y:{ticks:{color:'#e8e0d0',font:{size:11}},grid:{display:false}}}}
+                y:{ticks:{color:'#e8e0d0',font:{size:11}},grid:{display:false}}}},
+      plugins:[etiquetasValor]
     });
   }
 }
