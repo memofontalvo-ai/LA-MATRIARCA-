@@ -1154,8 +1154,8 @@ function readExcel(file,periodLabel,year,month){
             else d=new Date(s);
           }
         }catch(e){ d=null; }
-        if(d && !isNaN(d.getTime())) return {year:d.getFullYear(), month:d.getMonth()+1};
-        return {year:defYear, month:defMonth};
+        if(d && !isNaN(d.getTime())) return {year:d.getFullYear(), month:d.getMonth()+1, fechaTxt:d.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'}), fechaNum:d.getTime()};
+        return {year:defYear, month:defMonth, fechaTxt:'', fechaNum:0};
       }
 
       for(const sheet of wb.SheetNames){
@@ -1206,6 +1206,7 @@ function readExcel(file,periodLabel,year,month){
                 costoTotal:costo,
                 year:rowYear, month:rowMonth,
                 periodoLabel:rowLabel,
+                fechaTxt:f.fechaTxt||'', fechaNum:f.fechaNum||0,
                 fileId, hoja:sheet, fileName:file.name,
               };
               // ── Clasificación por categoría (desde el código) ──
@@ -1819,48 +1820,84 @@ function cerrarComparador(){
   document.getElementById('modal-precios').style.display='none';
 }
 function compararPrecios(nombreProd){
-  const d=fd().filter(r=>r.nombre===nombreProd && r.cantidad>0 && r.valorUnidad>0);
-  if(!d.length){ return; }
+  const dAll=fd().filter(r=>r.nombre===nombreProd && r.cantidad>0 && r.valorUnidad>0);
+  if(!dAll.length){ return; }
 
-  // Agrupar por proveedor: precio promedio ponderado y último precio
+  // ── Paso 1: detectar la presentación DOMINANTE del producto ──
+  // Un mismo producto a veces se captura en gramos y otras en unidades.
+  // Mezclarlas daña el precio, así que comparamos solo la presentación más usada.
+  // Usamos r.unidad (la unidad YA procesada al cargar: 'gr','und','L','bot','kg'...)
+  // porque para MIL el sistema ya ajustó cantidad a litros o botellas.
+  function presKey(r){
+    // Preferir la unidad ya calculada; si no, derivar de la presentación cruda
+    let u=String(r.unidad||'').toLowerCase();
+    const p=String(r.presentacion||'').toUpperCase();
+    if(p==='GRS'||p==='GR'||p==='KG'||p==='KGS') return 'GRS';   // peso → gramos
+    if(u==='l'||p==='ML'||p==='LT'||p==='L') return 'ML';         // volumen → litros
+    if(u==='bot') return 'BOT';                                    // botellas
+    return 'UND';                                                  // unidad
+  }
+  const presCount={};
+  dAll.forEach(r=>{ const k=presKey(r); presCount[k]=(presCount[k]||0)+1; });
+  const presDom=Object.entries(presCount).sort((a,b)=>b[1]-a[1])[0][0];
+  const hayMezcla=Object.keys(presCount).length>1;
+  // Solo compras de la presentación dominante
+  const d=dAll.filter(r=>presKey(r)===presDom);
+
+  // Etiqueta de unidad legible — según la unidad de medida real
+  let presentacion = presDom==='GRS'?'gramo':presDom==='ML'?'litro':presDom==='BOT'?'botella':'unidad';
+
+  // ── Paso 2: agrupar por proveedor con precio por compra ──
   const provs={};
-  let presentacion='und';
   d.forEach(r=>{
     const k=(r.nombreProveedor||r.proveedor||'—').trim();
-    if(!provs[k]) provs[k]={nom:k,sumCosto:0,sumQty:0,compras:0,ultimoPrecio:0,ultimoY:0,ultimoM:0,unit:r.unidad||'und'};
-    // Tomar la presentación real del Excel (GRS, UND, ML, etc.)
-    if(r.presentacion){
-      const pres=String(r.presentacion).toUpperCase();
-      if(pres==='GRS'||pres==='GR') presentacion='gramo';
-      else if(pres==='KG'||pres==='KGS') presentacion='kg';
-      else if(pres==='ML') presentacion='ml';
-      else if(pres==='LT'||pres==='L') presentacion='litro';
-      else if(pres==='UND'||pres==='UN') presentacion='unidad';
-      else if(pres==='MIL') presentacion=r.unidad==='bot'?'botella':(r.unidad==='L'?'litro':'unidad');
-      else presentacion=pres.toLowerCase();
-    }
+    if(!provs[k]) provs[k]={nom:k,precios:[],compras:0,ultimoPrecio:0,ultimoFechaNum:0,ultimoFechaTxt:'',unit:r.unidad||'und'};
     const p=provs[k];
-    p.sumCosto+=r.costoTotal; p.sumQty+=r.cantidad; p.compras++;
-    const yy=r.year||0, mm=r.month||0;
-    if(yy>p.ultimoY || (yy===p.ultimoY && mm>=p.ultimoM)){
-      p.ultimoY=yy; p.ultimoM=mm; p.ultimoPrecio=r.valorUnidad;
-    }
+    const precioUnit = r.cantidad>0 ? r.costoTotal/r.cantidad : 0;
+    if(precioUnit>0) p.precios.push(precioUnit);
+    p.compras++;
+    let fnum=r.fechaNum||0, ftxt=r.fechaTxt||'';
+    if(!fnum){ const yy=r.year||0, mm=r.month||0; fnum=yy*100+mm; ftxt=mm?(['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][mm]+' '+yy):(yy||''); }
+    if(fnum>=p.ultimoFechaNum && precioUnit>0){ p.ultimoFechaNum=fnum; p.ultimoPrecio=precioUnit; p.ultimoFechaTxt=ftxt; }
   });
 
-  // Si viene en gramos, convertir el precio a KILO (×1000) y mostrar la unidad como "kilo"
+  // Conversión: solo gramos→kilo (×1000). Litros y botellas ya vienen ajustados
+  // desde la carga (la cantidad ya está en litros/botellas), así que factor=1.
   let factor=1;
   if(presentacion==='gramo'){ factor=1000; presentacion='kilo'; }
-  else if(presentacion==='ml'){ factor=1000; presentacion='litro'; }
 
-  let lista=Object.values(provs).map(p=>({
-    nom:p.nom,
-    promedio: p.sumQty>0 ? (p.sumCosto/p.sumQty)*factor : 0,
-    ultimo: p.ultimoPrecio*factor,
-    compras:p.compras,
-    unit:p.unit
-  })).filter(p=>p.promedio>0);
+  // Mediana robusta dentro de la presentación dominante: descarta atípicos.
+  const todosPrecios=[];
+  Object.values(provs).forEach(p=>p.precios.forEach(x=>todosPrecios.push(x)));
+  todosPrecios.sort((a,b)=>a-b);
+  const medianaGlobal = todosPrecios.length ? todosPrecios[Math.floor(todosPrecios.length/2)] : 0;
+  // Un precio es válido si está entre el 15% y el 600% de la mediana global
+  const esValido = x => medianaGlobal<=0 || (x >= medianaGlobal*0.15 && x <= medianaGlobal*6);
 
-  // Ordenar por precio promedio: más barato primero
+  function medianaDe(arr){
+    const a=arr.filter(esValido).sort((x,y)=>x-y);
+    if(!a.length) return 0;
+    const m=Math.floor(a.length/2);
+    return a.length%2 ? a[m] : (a[m-1]+a[m])/2;
+  }
+
+  let huboAtipicos=false;
+  let lista=Object.values(provs).map(p=>{
+    const validos=p.precios.filter(esValido);
+    if(validos.length<p.precios.length) huboAtipicos=true;
+    const prom=medianaDe(p.precios); // mediana de precios válidos = precio típico
+    return {
+      nom:p.nom,
+      promedio: prom*factor,
+      ultimo: (esValido(p.ultimoPrecio)?p.ultimoPrecio:prom)*factor,
+      ultimoFecha: p.ultimoFechaTxt,
+      compras:p.compras,
+      descartados: p.precios.length-validos.length,
+      unit:p.unit
+    };
+  }).filter(p=>p.promedio>0);
+
+  // Ordenar por precio típico: más barato primero
   lista.sort((a,b)=>a.promedio-b.promedio);
 
   const mejor=lista[0], peor=lista[lista.length-1];
@@ -1873,6 +1910,13 @@ function compararPrecios(nombreProd){
 
   // Resumen mejor/peor
   let html='';
+  if(hayMezcla){
+    const otras=Object.entries(presCount).filter(([k])=>k!==presDom).reduce((s,[,n])=>s+n,0);
+    html+=`<div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:8px 11px;margin-bottom:12px;font-size:11px;color:#c9a84c;">ℹ️ Este producto se compró en varias presentaciones. Se compara solo la más usada (${presentacion}); se omitieron ${otras} compras en otra presentación.</div>`;
+  }
+  if(huboAtipicos){
+    html+=`<div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:8px 11px;margin-bottom:12px;font-size:11px;color:#c9a84c;">⚠️ Se ignoraron algunas compras con precios atípicos (posibles errores de captura). El precio mostrado es el típico (mediana).</div>`;
+  }
   if(lista.length>1){
     html+=`<div style="display:flex;gap:8px;margin-bottom:14px;">
       <div style="flex:1;background:rgba(76,170,110,.12);border:1px solid #4caa6e;border-radius:10px;padding:10px;">
@@ -1909,7 +1953,7 @@ function compararPrecios(nombreProd){
       <div style="font-size:15px;min-width:26px;text-align:center;">${medalla}</div>
       <div style="flex:1;min-width:0;">
         <div style="color:#e8e0d0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${shortName(p.nom)}</div>
-        <div style="color:#7a7265;font-size:11px;">${p.compras} ${p.compras===1?'compra':'compras'} · último: ${fmtFull(p.ultimo)}</div>
+        <div style="color:#7a7265;font-size:11px;">${p.compras} ${p.compras===1?'compra':'compras'} · último: ${fmtFull(p.ultimo)}${p.ultimoFecha?' <span style="color:#9a9080">('+p.ultimoFecha+')</span>':''}</div>
       </div>
       <div style="text-align:right;">
         <div style="color:${col};font-size:14px;font-weight:700;">${fmtFull(p.promedio)}</div>
