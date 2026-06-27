@@ -657,11 +657,12 @@ canvas{display:block;max-width:100%!important;}
           <p>Carga al menos 2 años diferentes (ej: 2025 y 2026) para comparar mes a mes.</p>
         </div>
         <div id="comp-anual" class="hidden" style="margin-bottom:18px">
+          <div id="comp-balance" style="margin-bottom:14px"></div>
           <div class="chart-card" style="margin-bottom:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px">
               <div>
                 <div class="chart-title">Comparativo Mensual: <span id="comp-y1">2025</span> vs <span id="comp-y2">2026</span></div>
-                <div class="chart-subtitle">Compras de licor mes a mes</div>
+                <div class="chart-subtitle">Gasto mes a mes — solo meses comparables</div>
               </div>
               <select class="table-filter" id="comp-prov-sel" style="min-width:150px"><option value="">Todos los proveedores</option></select>
             </div>
@@ -2227,7 +2228,8 @@ function renderComparativoAnual(){
       const pct=((v2-v1)/v1*100);
       const subio=pct>=0;
       const dif=v2-v1;
-      diffColor=subio?'#4caa6e':'#c94c4c';
+      // Gastar MÁS que el año pasado = rojo (malo); gastar MENOS = verde (bueno)
+      diffColor=subio?'#c94c4c':'#4caa6e';
       diffTxt=`${subio?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%`;
       diffPesos=`<br><span style="font-size:11px;font-weight:600;color:${diffColor}">${dif>=0?'+':'−'}${fmtFull(Math.abs(dif))}</span>`;
     } else if(v2>0&&v1===0){
@@ -2257,7 +2259,7 @@ function renderComparativoAnual(){
   if(tot1>0&&tot2>0){
     const pct=((tot2-tot1)/tot1*100);
     const dif=tot2-tot1;
-    totColor=pct>=0?'#4caa6e':'#c94c4c';
+    totColor=pct>=0?'#c94c4c':'#4caa6e';
     totDiff=`${pct>=0?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%`;
     totPesos=`<br><span style="font-size:12px;font-weight:700;color:${totColor}">${dif>=0?'+':'−'}${fmtFull(Math.abs(dif))}</span>`;
   }
@@ -2269,6 +2271,32 @@ function renderComparativoAnual(){
     <td class="td-num" style="color:${totColor};font-weight:700">${totDiff}${totPesos}</td>
   </tr>`;
   document.getElementById('comp-anual-body').innerHTML=html;
+
+  // Panel de balance: resumen grande del acumulado comparable
+  const balCont=document.getElementById('comp-balance');
+  if(tot1>0 && tot2>0){
+    const difTot=tot2-tot1;
+    const pctTot=((tot2-tot1)/tot1*100);
+    const gastoMas=difTot>0;
+    const col=gastoMas?'#c94c4c':'#4caa6e';
+    const bg=gastoMas?'rgba(201,76,76,.10)':'rgba(76,170,110,.10)';
+    const icono=gastoMas?'▲':'▼';
+    const palabra=gastoMas?'MÁS':'MENOS';
+    balCont.innerHTML=`
+      <div style="background:${bg};border:1px solid ${col};border-radius:12px;padding:16px;">
+        <div style="font-size:11px;color:#9a9080;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px;">Balance ${y2} vs ${y1} (${rangoTxt})</div>
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:24px;font-weight:800;color:${col};">${icono} ${fmtFull(Math.abs(difTot))}</span>
+          <span style="font-size:14px;color:${col};font-weight:700;">${Math.abs(pctTot).toFixed(1)}% ${palabra}</span>
+        </div>
+        <div style="font-size:12px;color:#9a9080;margin-top:6px;">
+          En ${y2} llevas gastado <b style="color:#e8e0d0;">${fmtFull(tot2)}</b>, comparado con <b style="color:#e8e0d0;">${fmtFull(tot1)}</b> en los mismos meses de ${y1}.
+          ${gastoMas?'Estás gastando más que el año pasado.':'¡Vas gastando menos que el año pasado!'}
+        </div>
+      </div>`;
+  } else {
+    balCont.innerHTML='';
+  }
 }
 
 // ── Comparativo (períodos) ───────────
