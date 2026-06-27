@@ -1238,11 +1238,31 @@ function readExcel(file,periodLabel,year,month){
         banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#c9a84c;color:#0f0e0c;text-align:center;padding:14px;font-weight:700;font-size:15px;z-index:999;';
         document.body.appendChild(banner);
       }
-      banner.textContent = '💾 Guardando en Firebase... espera';
+      banner.textContent = '🧹 Preparando... limpiando carga anterior del mes';
       banner.style.display = 'block';
       window._guardando = true; // proteger contra cierre accidental
 
       try {
+        // ── Limpieza previa: borrar cualquier resto del MISMO mes/año ──
+        // (evita duplicados y fantasmas de una carga anterior a medias)
+        if(year && month){
+          try{
+            while(true){
+              let snap;
+              try{ snap = await db.collection(COL_DATA).where('year','==',year).where('month','==',month).limit(400).get({source:'server'}); }
+              catch(e){ snap = await db.collection(COL_DATA).where('year','==',year).where('month','==',month).limit(400).get(); }
+              if(snap.empty) break;
+              const b=db.batch(); snap.docs.forEach(d=>b.delete(d.ref)); await b.commit();
+              banner.textContent='🧹 Limpiando carga anterior del mes...';
+              if(snap.docs.length<400) break;
+            }
+            // borrar metadatos de archivos viejos del mismo mes
+            const fsnap = await db.collection(COL_FILES).where('year','==',year).where('month','==',month).get();
+            for(const doc of fsnap.docs){ if(doc.id!==fileId) await doc.ref.delete(); }
+          }catch(limpErr){ console.warn('limpieza previa', limpErr); }
+        }
+
+        banner.textContent = '💾 Guardando en Firebase... espera';
         await db.collection(COL_FILES).doc(fileId).set(fileMeta);
 
         // Lotes grandes (Firestore admite hasta 500 ops por batch).
@@ -1516,6 +1536,12 @@ async function limpiarTodo(){
 }
 
 async function removeFile(fileId){
+  // Identificar el mes/año del archivo a borrar (para limpiar también huérfanos
+  // de cargas a medias que tengan otro fileId pero el mismo mes/año)
+  const fileMeta = filesLoaded.find(f=>f.id===fileId);
+  const targetYear = fileMeta ? fileMeta.year : null;
+  const targetMonth = fileMeta ? fileMeta.month : null;
+
   allData=allData.filter(r=>r.fileId!==fileId);
   filesLoaded=filesLoaded.filter(f=>f.id!==fileId);
   renderFilesLoaded();refreshYearButtons();updateMonthSelector();
@@ -1526,20 +1552,67 @@ async function removeFile(fileId){
 
   // Eliminar de Firebase
   try {
+    const banner = mostrarBannerBorrado('🗑️ Eliminando... espera');
     await db.collection(COL_FILES).doc(fileId).delete();
-    // Eliminar registros en lotes
-    const snap = await db.collection(COL_DATA).where('fileId','==',fileId).get();
-    const BATCH_SIZE = 400;
-    for(let i = 0; i < snap.docs.length; i += BATCH_SIZE) {
-      const batch = db.batch();
-      snap.docs.slice(i, i + BATCH_SIZE).forEach(d => batch.delete(d.ref));
-      await batch.commit();
+
+    // 1) Borrar por fileId (lo normal)
+    await borrarPorConsulta(db.collection(COL_DATA).where('fileId','==',fileId), banner);
+
+    // 2) Si conocemos el mes/año, borrar TODOS los registros de ese mes
+    //    (incluye huérfanos de cargas a medias con otro fileId)
+    if(targetYear && targetMonth){
+      await borrarPorConsulta(
+        db.collection(COL_DATA).where('year','==',targetYear).where('month','==',targetMonth),
+        banner
+      );
+      // Borrar también cualquier doc de archivo (COL_FILES) del mismo mes/año
+      try{
+        const fsnap = await db.collection(COL_FILES).where('year','==',targetYear).where('month','==',targetMonth).get();
+        for(const doc of fsnap.docs){ await doc.ref.delete(); }
+      }catch(e){ console.warn('limpieza files', e); }
     }
-    showToast('🗑️ Archivo eliminado de la base de datos');
+    ocultarBannerBorrado(banner, '✅ Mes eliminado por completo');
   } catch(err) {
     console.error('Firebase delete error:', err);
     showToast('⚠️ Error eliminando de Firebase: ' + err.message);
   }
+}
+
+// Borra todos los documentos que devuelva una consulta, en lotes, con reintento
+async function borrarPorConsulta(query, banner){
+  let total=0;
+  while(true){
+    let snap;
+    try{ snap = await query.limit(400).get({source:'server'}); }
+    catch(e){ snap = await query.limit(400).get(); }
+    if(snap.empty) break;
+    const batch = db.batch();
+    snap.docs.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    total += snap.docs.length;
+    if(banner) banner.textContent = `🗑️ Eliminando ${total.toLocaleString()} registros...`;
+    if(snap.docs.length<400) break;
+  }
+  return total;
+}
+
+function mostrarBannerBorrado(txt){
+  let banner=document.getElementById('save-banner');
+  if(!banner){
+    banner=document.createElement('div');
+    banner.id='save-banner';
+    banner.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#c97a4c;color:#fff;text-align:center;padding:14px;font-weight:700;font-size:15px;z-index:999;';
+    document.body.appendChild(banner);
+  }
+  banner.style.background='#c97a4c'; banner.style.color='#fff';
+  banner.textContent=txt; banner.style.display='block';
+  return banner;
+}
+function ocultarBannerBorrado(banner, txt){
+  if(!banner) return;
+  banner.style.background='#4caa6e';
+  banner.textContent=txt;
+  setTimeout(()=>{ banner.style.display='none'; }, 3000);
 }
 let aniosAbiertos = {}; // recuerda qué años están desplegados
 
@@ -2548,6 +2621,11 @@ async function loadFromDB() {
 
 // Inicializar Firebase y cargar datos cuando todo esté listo
 function initFirebase() {
+  // Limpiar cualquier banner de "Guardando..." que haya quedado pegado de una sesión anterior
+  window._guardando = false;
+  const oldBanner = document.getElementById('save-banner');
+  if(oldBanner) oldBanner.style.display = 'none';
+
   if (typeof firebase === 'undefined') {
     setTimeout(initFirebase, 200); // esperar si firebase aún no cargó
     return;
